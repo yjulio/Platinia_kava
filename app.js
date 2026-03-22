@@ -59,13 +59,13 @@
     function updateDashboard() {
         const fs = filteredSales();
         const fe = filteredExpenses();
-        const totalSales = fs.reduce((sum, s) => sum + (s.kilos || s.quantity || 0) * (s.pricePerKilo || s.unitPrice || 0), 0);
-        const totalKilos = fs.reduce((sum, s) => sum + (s.kilos || s.quantity || 0), 0);
+        const totalSales = fs.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
+        const totalNights = new Set(fs.map(s => s.date)).size;
         const totalExpenses = fe.reduce((sum, e) => sum + e.amount, 0);
         const profit = totalSales - totalExpenses;
 
         $('#totalSales').textContent = formatCurrency(totalSales);
-        $('#totalKilos').textContent = totalKilos.toFixed(2) + ' kg';
+        $('#totalNights').textContent = totalNights;
         $('#totalExpenses').textContent = formatCurrency(totalExpenses);
 
         const profitEl = $('#netProfit');
@@ -78,57 +78,27 @@
     // ---- Sale Form ----
     function initSaleForm() {
         const saleDate = $('#saleDate');
-        const saleProduct = $('#saleProduct');
-        const customProductGroup = $('#customProductGroup');
-        const customProduct = $('#customProduct');
-        const saleKilos = $('#saleKilos');
-        const salePricePerKilo = $('#salePricePerKilo');
-        const saleCustomer = $('#saleCustomer');
+        const saleAmount = $('#saleAmount');
         const saleNotes = $('#saleNotes');
-        const saleTotal = $('#saleTotal');
         const saleForm = $('#saleForm');
 
         saleDate.value = todayISO();
 
-        saleProduct.addEventListener('change', () => {
-            customProductGroup.style.display = saleProduct.value === 'Other' ? 'block' : 'none';
-        });
-
-        function updateSaleTotal() {
-            const kilos = parseFloat(saleKilos.value) || 0;
-            const pricePerKilo = parseFloat(salePricePerKilo.value) || 0;
-            saleTotal.textContent = formatCurrency(kilos * pricePerKilo);
-        }
-        saleKilos.addEventListener('input', updateSaleTotal);
-        salePricePerKilo.addEventListener('input', updateSaleTotal);
-
         saleForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            let product = saleProduct.value;
-            if (product === 'Other') {
-                product = customProduct.value.trim();
-                if (!product) { showToast('Please enter a product name', true); return; }
-            }
-            const kilos = parseFloat(saleKilos.value);
-            const pricePerKilo = parseFloat(salePricePerKilo.value);
-            if (!kilos || kilos <= 0) { showToast('Please enter valid kilos', true); return; }
-            if (!pricePerKilo || pricePerKilo < 0) { showToast('Please enter valid price per kilo', true); return; }
+            const amount = parseFloat(saleAmount.value);
+            if (!amount || amount <= 0) { showToast('Please enter a valid amount', true); return; }
 
             sales.push({
                 id: generateId(),
                 date: saleDate.value,
-                product,
-                kilos,
-                pricePerKilo,
-                customer: saleCustomer.value.trim() || 'Walk-in',
+                amount,
                 notes: saleNotes.value.trim(),
             });
             saveData(STORAGE_KEYS.sales, sales);
             saleForm.reset();
             saleDate.value = todayISO();
-            customProductGroup.style.display = 'none';
-            saleTotal.textContent = '0 VT';
-            showToast('Sale recorded!');
+            showToast('Nightly sales recorded!');
             refreshAll();
         });
     }
@@ -201,17 +171,11 @@
         tbody.innerHTML = '';
 
         fs.forEach(s => {
-            const kilos = s.kilos || s.quantity || 0;
-            const pricePerKilo = s.pricePerKilo || s.unitPrice || 0;
-            const total = kilos * pricePerKilo;
+            const amount = s.amount || (s.kilos || 0) * (s.pricePerKilo || 0);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${escapeHtml(s.date)}</td>
-                <td>${escapeHtml(s.product)}</td>
-                <td>${kilos.toFixed(2)} kg</td>
-                <td>${formatCurrency(pricePerKilo)}</td>
-                <td><strong class="text-gold">${formatCurrency(total)}</strong></td>
-                <td>${escapeHtml(s.customer)}</td>
+                <td><strong class="text-gold">${formatCurrency(amount)}</strong></td>
                 <td class="text-muted">${escapeHtml(s.notes || '—')}</td>
                 <td class="text-center"><button class="btn-icon-delete" title="Delete"><i class="bi bi-trash"></i></button></td>
             `;
@@ -259,8 +223,7 @@
 
         dates.forEach(date => {
             const daySalesEntries = fs.filter(s => s.date === date);
-            const dayKilos = daySalesEntries.reduce((sum, s) => sum + (s.kilos || s.quantity || 0), 0);
-            const daySales = daySalesEntries.reduce((sum, s) => sum + (s.kilos || s.quantity || 0) * (s.pricePerKilo || s.unitPrice || 0), 0);
+            const daySales = daySalesEntries.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
             const dayExpenses = fe.filter(e => e.date === date).reduce((sum, e) => sum + e.amount, 0);
             const dayProfit = daySales - dayExpenses;
 
@@ -271,7 +234,6 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${escapeHtml(date)}</td>
-                <td>${dayKilos.toFixed(2)} kg</td>
                 <td>${formatCurrency(daySales)}</td>
                 <td>${formatCurrency(dayExpenses)}</td>
                 <td class="${profitClass}">${formatCurrency(dayProfit)}</td>
@@ -313,22 +275,13 @@
             const ms = sales.filter(s => s.date.startsWith(month));
             const me = expenses.filter(e => e.date.startsWith(month));
 
-            const totalKilos = ms.reduce((sum, s) => sum + (s.kilos || s.quantity || 0), 0);
-            const totalSalesAmt = ms.reduce((sum, s) => sum + (s.kilos || s.quantity || 0) * (s.pricePerKilo || s.unitPrice || 0), 0);
+            const totalSalesAmt = ms.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
+            const totalNights = new Set(ms.map(s => s.date)).size;
             const totalExpensesAmt = me.reduce((sum, e) => sum + e.amount, 0);
             const netProfit = totalSalesAmt - totalExpensesAmt;
 
             const expByCat = {};
             me.forEach(e => { expByCat[e.category] = (expByCat[e.category] || 0) + e.amount; });
-
-            const salesByProduct = {};
-            ms.forEach(s => {
-                if (!salesByProduct[s.product]) salesByProduct[s.product] = { kilos: 0, revenue: 0 };
-                const k = s.kilos || s.quantity || 0;
-                const p = s.pricePerKilo || s.unitPrice || 0;
-                salesByProduct[s.product].kilos += k;
-                salesByProduct[s.product].revenue += k * p;
-            });
 
             const dateSet = new Set();
             ms.forEach(s => dateSet.add(s.date));
@@ -338,21 +291,15 @@
             const dailyRows = dates.map(date => {
                 const dayS = ms.filter(s => s.date === date);
                 const dayE = me.filter(e => e.date === date);
-                const dKilos = dayS.reduce((sum, s) => sum + (s.kilos || s.quantity || 0), 0);
-                const dSales = dayS.reduce((sum, s) => sum + (s.kilos || s.quantity || 0) * (s.pricePerKilo || s.unitPrice || 0), 0);
+                const dSales = dayS.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
                 const dExp = dayE.reduce((sum, e) => sum + e.amount, 0);
                 return `<tr>
                     <td>${escapeHtml(date)}</td>
-                    <td>${dKilos.toFixed(2)} kg</td>
                     <td>${formatCurrency(dSales)}</td>
                     <td>${formatCurrency(dExp)}</td>
                     <td class="${dSales - dExp >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(dSales - dExp)}</td>
                 </tr>`;
             }).join('');
-
-            const productRows = Object.entries(salesByProduct).map(([name, data]) =>
-                `<tr><td>${escapeHtml(name)}</td><td>${data.kilos.toFixed(2)} kg</td><td>${formatCurrency(data.revenue)}</td></tr>`
-            ).join('');
 
             const expRows = Object.entries(expByCat).sort((a, b) => b[1] - a[1]).map(([cat, amt]) =>
                 `<tr><td>${escapeHtml(cat)}</td><td>${formatCurrency(amt)}</td></tr>`
@@ -371,19 +318,16 @@
                 </div>
                 <div class="report-summary-cards">
                     <div class="report-card"><span class="report-card-label">Total Sales</span><span class="report-card-value">${formatCurrency(totalSalesAmt)}</span></div>
-                    <div class="report-card"><span class="report-card-label">Total Kilos</span><span class="report-card-value">${totalKilos.toFixed(2)} kg</span></div>
+                    <div class="report-card"><span class="report-card-label">Nights Recorded</span><span class="report-card-value">${totalNights}</span></div>
                     <div class="report-card"><span class="report-card-label">Total Expenses</span><span class="report-card-value">${formatCurrency(totalExpensesAmt)}</span></div>
                     <div class="report-card"><span class="report-card-label">Net Profit</span><span class="report-card-value ${profitClass}">${formatCurrency(netProfit)}</span></div>
                 </div>
-                <h4>Sales by Product</h4>
-                <table class="report-table"><thead><tr><th>Product</th><th>Kilos</th><th>Revenue</th></tr></thead>
-                <tbody>${productRows || '<tr><td colspan="3" class="text-center text-muted fst-italic">No sales</td></tr>'}</tbody></table>
                 <h4>Expenses by Category</h4>
                 <table class="report-table"><thead><tr><th>Category</th><th>Amount</th></tr></thead>
                 <tbody>${expRows || '<tr><td colspan="2" class="text-center text-muted fst-italic">No expenses</td></tr>'}</tbody></table>
                 <h4>Daily Breakdown</h4>
-                <table class="report-table"><thead><tr><th>Date</th><th>Kilos</th><th>Sales</th><th>Expenses</th><th>Profit</th></tr></thead>
-                <tbody>${dailyRows || '<tr><td colspan="5" class="text-center text-muted fst-italic">No records</td></tr>'}</tbody></table>
+                <table class="report-table"><thead><tr><th>Date (Night)</th><th>Sales</th><th>Expenses</th><th>Profit</th></tr></thead>
+                <tbody>${dailyRows || '<tr><td colspan="4" class="text-center text-muted fst-italic">No records</td></tr>'}</tbody></table>
                 <div class="report-footer">
                     <p>Prepared for Committee Meeting</p>
                     <p><em>Indigenous Trade Limited &mdash; Together Yumi Build</em></p>

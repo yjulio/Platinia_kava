@@ -83,9 +83,10 @@
                 <div class="col-6 col-lg-3">
                     <div class="card card-dash border-0 h-100">
                         <div class="card-body text-center p-3">
-                            <div class="dash-icon text-info mb-2"><i class="bi bi-box-seam"></i></div>
-                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Total Kilos</p>
-                            <h4 class="card-value text-info mb-0" id="totalKilos">0.00 kg</h4>
+                            <div class="dash-icon text-info mb-2"><i class="bi bi-moon-stars"></i></div>
+                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Nights Recorded
+                            </p>
+                            <h4 class="card-value text-info mb-0" id="totalNights">0</h4>
                         </div>
                     </div>
                 </div>
@@ -168,57 +169,29 @@
 
                 <!-- Record Sale -->
                 <div class="tab-pane fade show active p-4" id="tab-sales" role="tabpanel">
-                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-cart-plus me-2"></i>Record a Sale</h5>
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-cart-plus me-2"></i>Record Nightly Sales</h5>
+                    <p class="text-muted mb-3">Enter the total amount earned each night from kava sales.</p>
                     <form id="saleForm">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="saleDate" class="form-label">Date</label>
+                                <label for="saleDate" class="form-label">Date (Night)</label>
                                 <input type="date" id="saleDate" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="saleProduct" class="form-label">Product</label>
-                                <select id="saleProduct" class="form-select">
-                                    <option value="Kava Shell (Cup)">Kava Shell (Cup)</option>
-                                    <option value="Kava Bowl">Kava Bowl</option>
-                                    <option value="Kava Pounder (Large)">Kava Pounder (Large)</option>
-                                    <option value="Kava Bundle (Bag)">Kava Bundle (Bag)</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                <label for="saleAmount" class="form-label">Total Amount Earned (VT)</label>
+                                <input type="number" id="saleAmount" class="form-control" min="0" step="1" required
+                                    placeholder="e.g. 15000">
                             </div>
-                            <div class="col-12" id="customProductGroup" style="display:none">
-                                <label for="customProduct" class="form-label">Custom Product Name</label>
-                                <input type="text" id="customProduct" class="form-control"
-                                    placeholder="Enter product name">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="saleKilos" class="form-label">Kilos (kg)</label>
-                                <input type="number" id="saleKilos" class="form-control" min="0.01" step="0.01" required
-                                    placeholder="0.00">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="salePricePerKilo" class="form-label">Price per Kilo (VT)</label>
-                                <input type="number" id="salePricePerKilo" class="form-control" min="0" step="0.01"
-                                    required placeholder="0.00">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="saleCustomer" class="form-label">Customer <span
-                                        class="text-muted">(optional)</span></label>
-                                <input type="text" id="saleCustomer" class="form-control" placeholder="Walk-in">
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label for="saleNotes" class="form-label">Notes <span
                                         class="text-muted">(optional)</span></label>
-                                <textarea id="saleNotes" rows="1" class="form-control"
-                                    placeholder="Any notes..."></textarea>
+                                <textarea id="saleNotes" rows="2" class="form-control"
+                                    placeholder="e.g. Busy night, rain slowed sales..."></textarea>
                             </div>
                         </div>
-                        <div
-                            class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top border-secondary">
-                            <div class="fs-5 fw-bold text-gold">
-                                Total: <span id="saleTotal">0 VT</span>
-                            </div>
+                        <div class="mt-4 pt-3 border-top border-secondary text-end">
                             <button type="submit" class="btn btn-gold btn-lg px-4">
-                                <i class="bi bi-check-lg me-1"></i>Save Sale
+                                <i class="bi bi-check-lg me-1"></i>Save Nightly Sales
                             </button>
                         </div>
                     </form>
@@ -293,12 +266,8 @@
                         <table class="table table-dark table-hover table-striped align-middle mb-0" id="salesTable">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Product</th>
-                                    <th>Kilos</th>
-                                    <th>VT/Kilo</th>
-                                    <th>Total</th>
-                                    <th>Customer</th>
+                                    <th>Date (Night)</th>
+                                    <th>Amount Earned</th>
                                     <th>Notes</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
@@ -339,8 +308,7 @@
                         <table class="table table-dark table-hover table-striped align-middle mb-0" id="summaryTable">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Kilos Sold</th>
+                                    <th>Date (Night)</th>
                                     <th>Sales</th>
                                     <th>Expenses</th>
                                     <th>Profit</th>
