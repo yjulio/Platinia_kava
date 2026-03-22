@@ -236,14 +236,28 @@
                             <div class="col-md-6">
                                 <label for="expenseCategory" class="form-label">Category</label>
                                 <select id="expenseCategory" class="form-select">
-                                    <option value="Kava Supply">Kava Supply (Raw Material)</option>
-                                    <option value="Rent">Rent</option>
-                                    <option value="Utilities">Utilities</option>
-                                    <option value="Equipment">Equipment</option>
-                                    <option value="Staff Wages">Staff Wages</option>
-                                    <option value="Transport">Transport</option>
-                                    <option value="Packaging">Packaging</option>
-                                    <option value="Marketing">Marketing</option>
+                                    <optgroup label="Kava Operations">
+                                        <option value="Kava Supply">Kava Supply (Raw Material)</option>
+                                        <option value="Packaging">Packaging</option>
+                                        <option value="Transport">Transport</option>
+                                        <option value="Equipment">Equipment</option>
+                                    </optgroup>
+                                    <optgroup label="Bills &amp; Utilities">
+                                        <option value="Water Bill">Water Bill</option>
+                                        <option value="Electricity Bill">Electricity Bill</option>
+                                        <option value="Phone / Internet Bill">Phone / Internet Bill</option>
+                                        <option value="Rent">Rent</option>
+                                    </optgroup>
+                                    <optgroup label="Office &amp; Supplies">
+                                        <option value="Toilet Paper">Toilet Paper</option>
+                                        <option value="Cleaning Supplies">Cleaning Supplies</option>
+                                        <option value="Office Supplies">Office Supplies</option>
+                                    </optgroup>
+                                    <optgroup label="Staff &amp; Operations">
+                                        <option value="Staff Wages">Staff Wages</option>
+                                        <option value="Food / Refreshments">Food / Refreshments</option>
+                                        <option value="Marketing">Marketing</option>
+                                    </optgroup>
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
