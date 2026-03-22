@@ -4,7 +4,7 @@
     'use strict';
 
     // ---- Data Layer ----
-    const STORAGE_KEYS = { sales: 'kava_sales', expenses: 'kava_expenses', adminPin: 'kava_admin_pin' };
+    const STORAGE_KEYS = { sales: 'kava_sales', expenses: 'kava_expenses', debts: 'kava_debts', adminPin: 'kava_admin_pin' };
     const DEFAULT_PIN = '1234';
 
     function loadData(key) {
@@ -16,6 +16,7 @@
 
     let sales = loadData(STORAGE_KEYS.sales);
     let expenses = loadData(STORAGE_KEYS.expenses);
+    let debts = loadData(STORAGE_KEYS.debts);
     let activeFilter = null;
     let currentRole = null;
 
@@ -181,6 +182,10 @@
                 expenses = expenses.filter(e => e.id !== pendingDeleteId);
                 saveData(STORAGE_KEYS.expenses, expenses);
                 showToast('Expense deleted');
+            } else if (pendingDeleteType === 'debt') {
+                debts = debts.filter(d => d.id !== pendingDeleteId);
+                saveData(STORAGE_KEYS.debts, debts);
+                showToast('Debt deleted');
             }
             deleteModal.hide();
             pendingDeleteType = null;
@@ -425,12 +430,101 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         });
     }
 
+    // ---- Debt Form ----
+    function initDebtForm() {
+        const debtDate = $('#debtDate');
+        const debtForm = $('#debtForm');
+        debtDate.value = todayISO();
+
+        debtForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const member = $('#debtMember').value.trim();
+            const amount = parseFloat($('#debtAmount').value);
+            const notes = $('#debtNotes').value.trim();
+            if (!member) { showToast('Enter member name', true); return; }
+            if (!amount || amount <= 0) { showToast('Enter a valid amount', true); return; }
+
+            debts.push({
+                id: generateId(),
+                date: debtDate.value,
+                member,
+                amount,
+                notes,
+                paid: false,
+                paidDate: null,
+            });
+            saveData(STORAGE_KEYS.debts, debts);
+            debtForm.reset();
+            debtDate.value = todayISO();
+            showToast('Debt recorded for ' + member);
+            refreshAll();
+        });
+    }
+
+    // ---- Render Debts ----
+    function renderDebtsTable() {
+        const sorted = [...debts].sort((a, b) => {
+            if (a.paid !== b.paid) return a.paid ? 1 : -1;
+            return b.date.localeCompare(a.date);
+        });
+        const tbody = $('#debtsTableBody');
+        const noMsg = $('#noDebtsMsg');
+        noMsg.style.display = sorted.length ? 'none' : 'block';
+        tbody.innerHTML = '';
+
+        const totalOwed = debts.reduce((sum, d) => sum + d.amount, 0);
+        const totalPaid = debts.filter(d => d.paid).reduce((sum, d) => sum + d.amount, 0);
+        $('#totalDebtOwed').textContent = formatCurrency(totalOwed);
+        $('#totalDebtPaid').textContent = formatCurrency(totalPaid);
+        $('#totalDebtOutstanding').textContent = formatCurrency(totalOwed - totalPaid);
+
+        sorted.forEach(d => {
+            const tr = document.createElement('tr');
+            if (d.paid) tr.classList.add('opacity-50');
+            const statusBadge = d.paid
+                ? `<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Paid${d.paidDate ? ' (' + d.paidDate + ')' : ''}</span>`
+                : `<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Unpaid</span>`;
+
+            let actionBtns = '';
+            if (!d.paid) {
+                actionBtns = `<button class="btn btn-sm btn-outline-success btn-mark-paid me-1" title="Mark as Paid"><i class="bi bi-check2-circle"></i></button>`;
+            }
+            actionBtns += `<button class="btn-icon-delete" title="Delete"><i class="bi bi-trash"></i></button>`;
+
+            tr.innerHTML = `
+                <td>${escapeHtml(d.date)}</td>
+                <td><strong>${escapeHtml(d.member)}</strong></td>
+                <td class="${d.paid ? 'text-muted' : 'text-warning'} fw-bold">${formatCurrency(d.amount)}</td>
+                <td class="text-muted">${escapeHtml(d.notes || '—')}</td>
+                <td>${statusBadge}</td>
+                <td class="text-center text-nowrap">${actionBtns}</td>
+            `;
+
+            const markBtn = tr.querySelector('.btn-mark-paid');
+            if (markBtn) {
+                markBtn.addEventListener('click', () => {
+                    const debt = debts.find(x => x.id === d.id);
+                    if (debt) {
+                        debt.paid = true;
+                        debt.paidDate = todayISO();
+                        saveData(STORAGE_KEYS.debts, debts);
+                        showToast(debt.member + '\'s debt marked as paid!');
+                        refreshAll();
+                    }
+                });
+            }
+            tr.querySelector('.btn-icon-delete').addEventListener('click', () => requestDelete('debt', d.id));
+            tbody.appendChild(tr);
+        });
+    }
+
     // ---- Refresh Everything ----
     function refreshAll() {
         updateDashboard();
         renderSalesTable();
         renderExpensesTable();
         renderDailySummary();
+        renderDebtsTable();
         if (currentRole) {
             const isAdmin = currentRole === 'admin';
             $$('.btn-icon-delete').forEach(btn => {
@@ -517,8 +611,11 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             item.style.display = isAdmin ? '' : 'none';
         });
 
-        // Show/hide delete buttons
+        // Show/hide delete buttons and mark-as-paid buttons
         $$('.btn-icon-delete').forEach(btn => {
+            btn.style.display = isAdmin ? '' : 'none';
+        });
+        $$('.btn-mark-paid').forEach(btn => {
             btn.style.display = isAdmin ? '' : 'none';
         });
 
@@ -548,6 +645,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         initSaleForm();
         initExpenseForm();
         initFilter();
+        initDebtForm();
         initReport();
         refreshAll();
     }
