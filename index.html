@@ -114,12 +114,14 @@
             <!-- Filter Bar -->
             <div class="card bg-surface border-0 mb-4">
                 <div class="card-body py-2 px-3">
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="d-flex align-items-center gap-2 flex-wrap filter-bar-inner">
                         <i class="bi bi-funnel text-gold"></i>
                         <label for="filterMonth" class="form-label mb-0 small fw-semibold text-muted">Filter:</label>
                         <input type="month" id="filterMonth" class="form-control form-control-sm w-auto">
-                        <button id="btnFilterApply" class="btn btn-sm btn-gold">Apply</button>
-                        <button id="btnFilterClear" class="btn btn-sm btn-outline-secondary">Show All</button>
+                        <div class="d-flex gap-2 filter-btns">
+                            <button id="btnFilterApply" class="btn btn-sm btn-gold">Apply</button>
+                            <button id="btnFilterClear" class="btn btn-sm btn-outline-secondary">Show All</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -396,20 +398,23 @@
 
                     <!-- Debt Summary Cards -->
                     <div class="row g-3 mb-4">
-                        <div class="col-6 col-md-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                        <div class="col-4">
+                            <div
+                                class="card bg-transparent border border-gold-subtle text-center p-3 debt-summary-card">
                                 <small class="text-muted text-uppercase fw-semibold">Total Owed</small>
                                 <span class="fs-5 fw-bold text-warning" id="totalDebtOwed">0 VT</span>
                             </div>
                         </div>
-                        <div class="col-6 col-md-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                        <div class="col-4">
+                            <div
+                                class="card bg-transparent border border-gold-subtle text-center p-3 debt-summary-card">
                                 <small class="text-muted text-uppercase fw-semibold">Total Paid</small>
                                 <span class="fs-5 fw-bold text-success" id="totalDebtPaid">0 VT</span>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                        <div class="col-4">
+                            <div
+                                class="card bg-transparent border border-gold-subtle text-center p-3 debt-summary-card">
                                 <small class="text-muted text-uppercase fw-semibold">Outstanding</small>
                                 <span class="fs-5 fw-bold text-danger" id="totalDebtOutstanding">0 VT</span>
                             </div>
@@ -495,6 +500,21 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Tab scroll fade indicator
+        (function () {
+            const tabs = document.getElementById('mainTabs');
+            if (!tabs) return;
+            function checkScroll() {
+                const canScroll = tabs.scrollWidth > tabs.clientWidth + 4;
+                const atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 4;
+                tabs.classList.toggle('is-scrollable', canScroll && !atEnd);
+            }
+            tabs.addEventListener('scroll', checkScroll, { passive: true });
+            window.addEventListener('resize', checkScroll);
+            setTimeout(checkScroll, 200);
+        })();
+    </script>
 </body>
 
 </html>

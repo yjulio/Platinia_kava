@@ -517,7 +517,136 @@ body {
     margin-top: 50px;
 }
 
-/* ===== Responsive ===== */
+/* ===== Mobile-Friendly Tab Navigation ===== */
+.tab-nav {
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
+.tab-nav::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, transparent, var(--surface-raised));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.tab-nav.is-scrollable::after {
+    opacity: 1;
+}
+
+/* ===== Touch-Friendly Sizing ===== */
+@media (max-width: 768px) {
+
+    /* Larger touch targets */
+    .btn {
+        min-height: 44px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .btn-sm {
+        min-height: 38px;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevent iOS zoom on focus */
+    }
+
+    /* Full-width submit buttons */
+    .tab-pane .text-end {
+        text-align: center !important;
+    }
+
+    .tab-pane .text-end .btn {
+        width: 100%;
+    }
+
+    /* Filter bar stacking */
+    .filter-bar-inner {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .filter-bar-inner .form-control {
+        width: 100% !important;
+    }
+
+    .filter-bar-inner .btn {
+        flex: 1;
+    }
+
+    /* Navbar compact */
+    .navbar-brand span {
+        font-size: 0.95rem;
+    }
+
+    .navbar-brand img {
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    /* Dashboard card tweaks */
+    .card-dash .card-body {
+        padding: 12px 8px !important;
+    }
+
+    .dash-icon {
+        font-size: 1.4rem;
+        margin-bottom: 4px !important;
+    }
+
+    .card-subtitle {
+        font-size: 0.65rem !important;
+    }
+
+    /* Report cards */
+    .report-card {
+        min-width: 100px;
+        padding: 10px 8px;
+    }
+
+    .report-card-value {
+        font-size: 1rem;
+    }
+
+    .report-card-label {
+        font-size: 0.6rem;
+    }
+
+    /* Report output */
+    .report-output {
+        padding: 16px;
+    }
+
+    .report-content .report-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .report-content .report-header h3 {
+        font-size: 0.95rem;
+    }
+
+    /* Debt summary cards */
+    .debt-summary-card {
+        padding: 10px !important;
+    }
+
+    .debt-summary-card .fs-5 {
+        font-size: 1rem !important;
+    }
+}
+
+/* ===== Small Phone Responsive ===== */
 @media (max-width: 576px) {
     .landing-title {
         font-size: 1.7rem;
@@ -529,21 +658,71 @@ body {
     }
 
     .card-value {
-        font-size: 1.15rem;
+        font-size: 1.05rem;
     }
 
     .tab-nav .nav-link {
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         padding: 8px 10px;
+        min-width: max-content;
     }
 
     .tab-content.card .tab-pane {
-        padding: 16px !important;
+        padding: 14px !important;
     }
 
     .signature-lines {
         flex-direction: column;
         gap: 30px;
+    }
+
+    /* Stack filter buttons */
+    .filter-btns {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    /* Compact tables on small screens */
+    .table-dark td,
+    .table-dark thead th {
+        font-size: 0.75rem;
+        padding: 8px 6px;
+    }
+
+    /* Debt action buttons compact */
+    .btn-mark-paid {
+        padding: 4px 8px !important;
+        font-size: 0.8rem !important;
+        min-height: 34px !important;
+    }
+
+    /* Container tighter padding */
+    .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    /* Form heading */
+    .tab-pane h5 {
+        font-size: 1.05rem;
+    }
+
+    /* Footer */
+    footer {
+        font-size: 0.75rem !important;
+        padding: 12px 0 !important;
+    }
+}
+
+/* ===== Safe Area for Notched Phones ===== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    body {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .position-fixed.bottom-0 {
+        bottom: env(safe-area-inset-bottom) !important;
     }
 }
 
