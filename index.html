@@ -83,10 +83,11 @@
                 <div class="col-6 col-lg-3">
                     <div class="card card-dash border-0 h-100">
                         <div class="card-body text-center p-3">
-                            <div class="dash-icon text-info mb-2"><i class="bi bi-moon-stars"></i></div>
-                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Nights Recorded
+                            <div class="dash-icon text-info mb-2"><i class="bi bi-box-seam"></i></div>
+                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Total Kilos
+                                Purchased
                             </p>
-                            <h4 class="card-value text-info mb-0" id="totalNights">0</h4>
+                            <h4 class="card-value text-info mb-0" id="totalKilos">0 kg</h4>
                         </div>
                     </div>
                 </div>
@@ -170,17 +171,38 @@
                 <!-- Record Sale -->
                 <div class="tab-pane fade show active p-4" id="tab-sales" role="tabpanel">
                     <h5 class="text-gold fw-bold mb-3"><i class="bi bi-cart-plus me-2"></i>Record Nightly Sales</h5>
-                    <p class="text-muted mb-3">Enter the total amount earned each night from kava sales.</p>
+                    <p class="text-muted mb-3">Enter the total amount earned each night and the kava purchased that day.
+                    </p>
                     <form id="saleForm">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="saleDate" class="form-label">Date (Night)</label>
                                 <input type="date" id="saleDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="saleKilos" class="form-label">Kilos Purchased (kg)</label>
+                                <input type="number" id="saleKilos" class="form-control" min="0" step="0.01" required
+                                    placeholder="e.g. 10">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="saleCostPerKilo" class="form-label">Cost per Kilo (VT)</label>
+                                <input type="number" id="saleCostPerKilo" class="form-control" min="0" step="1" required
+                                    placeholder="e.g. 500">
                             </div>
                             <div class="col-md-6">
                                 <label for="saleAmount" class="form-label">Total Amount Earned (VT)</label>
                                 <input type="number" id="saleAmount" class="form-control" min="0" step="1" required
                                     placeholder="e.g. 15000">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-transparent border border-gold-subtle h-100">
+                                    <div class="card-body p-2 text-center">
+                                        <small class="text-muted d-block">Purchase Cost</small>
+                                        <span class="fs-5 fw-bold text-danger" id="salePurchaseCost">0 VT</span>
+                                        <small class="text-muted d-block mt-1">Night Profit</small>
+                                        <span class="fs-5 fw-bold text-success" id="saleNightProfit">0 VT</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label for="saleNotes" class="form-label">Notes <span
@@ -267,7 +289,11 @@
                             <thead>
                                 <tr>
                                     <th>Date (Night)</th>
+                                    <th>Kilos</th>
+                                    <th>Cost/Kilo</th>
+                                    <th>Purchase Cost</th>
                                     <th>Amount Earned</th>
+                                    <th>Profit</th>
                                     <th>Notes</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
@@ -309,6 +335,8 @@
                             <thead>
                                 <tr>
                                     <th>Date (Night)</th>
+                                    <th>Kilos</th>
+                                    <th>Purchase Cost</th>
                                     <th>Sales</th>
                                     <th>Expenses</th>
                                     <th>Profit</th>

@@ -60,12 +60,12 @@
         const fs = filteredSales();
         const fe = filteredExpenses();
         const totalSales = fs.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
-        const totalNights = new Set(fs.map(s => s.date)).size;
+        const totalKilos = fs.reduce((sum, s) => sum + (s.kilos || 0), 0);
         const totalExpenses = fe.reduce((sum, e) => sum + e.amount, 0);
         const profit = totalSales - totalExpenses;
 
         $('#totalSales').textContent = formatCurrency(totalSales);
-        $('#totalNights').textContent = totalNights;
+        $('#totalKilos').textContent = totalKilos.toFixed(2) + ' kg';
         $('#totalExpenses').textContent = formatCurrency(totalExpenses);
 
         const profitEl = $('#netProfit');
@@ -78,26 +78,53 @@
     // ---- Sale Form ----
     function initSaleForm() {
         const saleDate = $('#saleDate');
+        const saleKilos = $('#saleKilos');
+        const saleCostPerKilo = $('#saleCostPerKilo');
         const saleAmount = $('#saleAmount');
         const saleNotes = $('#saleNotes');
         const saleForm = $('#saleForm');
+        const salePurchaseCost = $('#salePurchaseCost');
+        const saleNightProfit = $('#saleNightProfit');
 
         saleDate.value = todayISO();
 
+        function updateSaleCalc() {
+            const kilos = parseFloat(saleKilos.value) || 0;
+            const costPerKilo = parseFloat(saleCostPerKilo.value) || 0;
+            const earned = parseFloat(saleAmount.value) || 0;
+            const purchaseCost = kilos * costPerKilo;
+            const profit = earned - purchaseCost;
+            salePurchaseCost.textContent = formatCurrency(purchaseCost);
+            saleNightProfit.textContent = formatCurrency(profit);
+            saleNightProfit.className = 'fs-5 fw-bold ' + (profit >= 0 ? 'text-success' : 'text-danger');
+        }
+        saleKilos.addEventListener('input', updateSaleCalc);
+        saleCostPerKilo.addEventListener('input', updateSaleCalc);
+        saleAmount.addEventListener('input', updateSaleCalc);
+
         saleForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const kilos = parseFloat(saleKilos.value);
+            const costPerKilo = parseFloat(saleCostPerKilo.value);
             const amount = parseFloat(saleAmount.value);
-            if (!amount || amount <= 0) { showToast('Please enter a valid amount', true); return; }
+            if (!kilos || kilos <= 0) { showToast('Please enter valid kilos', true); return; }
+            if (!costPerKilo || costPerKilo <= 0) { showToast('Please enter cost per kilo', true); return; }
+            if (!amount || amount <= 0) { showToast('Please enter a valid amount earned', true); return; }
 
             sales.push({
                 id: generateId(),
                 date: saleDate.value,
+                kilos,
+                costPerKilo,
                 amount,
                 notes: saleNotes.value.trim(),
             });
             saveData(STORAGE_KEYS.sales, sales);
             saleForm.reset();
             saleDate.value = todayISO();
+            salePurchaseCost.textContent = '0 VT';
+            saleNightProfit.textContent = '0 VT';
+            saleNightProfit.className = 'fs-5 fw-bold text-success';
             showToast('Nightly sales recorded!');
             refreshAll();
         });
@@ -172,10 +199,19 @@
 
         fs.forEach(s => {
             const amount = s.amount || (s.kilos || 0) * (s.pricePerKilo || 0);
+            const kilos = s.kilos || 0;
+            const costPerKilo = s.costPerKilo || s.pricePerKilo || 0;
+            const purchaseCost = kilos * costPerKilo;
+            const nightProfit = amount - purchaseCost;
+            const profitClass = nightProfit >= 0 ? 'text-success' : 'text-danger';
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${escapeHtml(s.date)}</td>
+                <td>${kilos.toFixed(2)} kg</td>
+                <td>${formatCurrency(costPerKilo)}</td>
+                <td class="text-danger">${formatCurrency(purchaseCost)}</td>
                 <td><strong class="text-gold">${formatCurrency(amount)}</strong></td>
+                <td class="${profitClass} fw-bold">${formatCurrency(nightProfit)}</td>
                 <td class="text-muted">${escapeHtml(s.notes || '—')}</td>
                 <td class="text-center"><button class="btn-icon-delete" title="Delete"><i class="bi bi-trash"></i></button></td>
             `;
@@ -223,9 +259,11 @@
 
         dates.forEach(date => {
             const daySalesEntries = fs.filter(s => s.date === date);
+            const dayKilos = daySalesEntries.reduce((sum, s) => sum + (s.kilos || 0), 0);
+            const dayPurchaseCost = daySalesEntries.reduce((sum, s) => sum + (s.kilos || 0) * (s.costPerKilo || s.pricePerKilo || 0), 0);
             const daySales = daySalesEntries.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
             const dayExpenses = fe.filter(e => e.date === date).reduce((sum, e) => sum + e.amount, 0);
-            const dayProfit = daySales - dayExpenses;
+            const dayProfit = daySales - dayPurchaseCost - dayExpenses;
 
             let profitClass = 'profit-zero';
             if (dayProfit > 0) profitClass = 'profit-positive';
@@ -234,6 +272,8 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${escapeHtml(date)}</td>
+                <td>${dayKilos.toFixed(2)} kg</td>
+                <td>${formatCurrency(dayPurchaseCost)}</td>
                 <td>${formatCurrency(daySales)}</td>
                 <td>${formatCurrency(dayExpenses)}</td>
                 <td class="${profitClass}">${formatCurrency(dayProfit)}</td>
@@ -276,9 +316,10 @@
             const me = expenses.filter(e => e.date.startsWith(month));
 
             const totalSalesAmt = ms.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
-            const totalNights = new Set(ms.map(s => s.date)).size;
+            const totalKilos = ms.reduce((sum, s) => sum + (s.kilos || 0), 0);
+            const totalPurchaseCost = ms.reduce((sum, s) => sum + (s.kilos || 0) * (s.costPerKilo || s.pricePerKilo || 0), 0);
             const totalExpensesAmt = me.reduce((sum, e) => sum + e.amount, 0);
-            const netProfit = totalSalesAmt - totalExpensesAmt;
+            const netProfit = totalSalesAmt - totalPurchaseCost - totalExpensesAmt;
 
             const expByCat = {};
             me.forEach(e => { expByCat[e.category] = (expByCat[e.category] || 0) + e.amount; });
@@ -291,13 +332,18 @@
             const dailyRows = dates.map(date => {
                 const dayS = ms.filter(s => s.date === date);
                 const dayE = me.filter(e => e.date === date);
+                const dKilos = dayS.reduce((sum, s) => sum + (s.kilos || 0), 0);
+                const dPurchase = dayS.reduce((sum, s) => sum + (s.kilos || 0) * (s.costPerKilo || s.pricePerKilo || 0), 0);
                 const dSales = dayS.reduce((sum, s) => sum + (s.amount || (s.kilos || 0) * (s.pricePerKilo || 0)), 0);
                 const dExp = dayE.reduce((sum, e) => sum + e.amount, 0);
+                const dProfit = dSales - dPurchase - dExp;
                 return `<tr>
                     <td>${escapeHtml(date)}</td>
+                    <td>${dKilos.toFixed(2)} kg</td>
+                    <td>${formatCurrency(dPurchase)}</td>
                     <td>${formatCurrency(dSales)}</td>
                     <td>${formatCurrency(dExp)}</td>
-                    <td class="${dSales - dExp >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(dSales - dExp)}</td>
+                    <td class="${dProfit >= 0 ? 'profit-positive' : 'profit-negative'}">${formatCurrency(dProfit)}</td>
                 </tr>`;
             }).join('');
 
@@ -318,16 +364,17 @@
                 </div>
                 <div class="report-summary-cards">
                     <div class="report-card"><span class="report-card-label">Total Sales</span><span class="report-card-value">${formatCurrency(totalSalesAmt)}</span></div>
-                    <div class="report-card"><span class="report-card-label">Nights Recorded</span><span class="report-card-value">${totalNights}</span></div>
-                    <div class="report-card"><span class="report-card-label">Total Expenses</span><span class="report-card-value">${formatCurrency(totalExpensesAmt)}</span></div>
+                    <div class="report-card"><span class="report-card-label">Total Kilos</span><span class="report-card-value">${totalKilos.toFixed(2)} kg</span></div>
+                    <div class="report-card"><span class="report-card-label">Purchase Cost</span><span class="report-card-value">${formatCurrency(totalPurchaseCost)}</span></div>
+                    <div class="report-card"><span class="report-card-label">Expenses</span><span class="report-card-value">${formatCurrency(totalExpensesAmt)}</span></div>
                     <div class="report-card"><span class="report-card-label">Net Profit</span><span class="report-card-value ${profitClass}">${formatCurrency(netProfit)}</span></div>
                 </div>
                 <h4>Expenses by Category</h4>
                 <table class="report-table"><thead><tr><th>Category</th><th>Amount</th></tr></thead>
                 <tbody>${expRows || '<tr><td colspan="2" class="text-center text-muted fst-italic">No expenses</td></tr>'}</tbody></table>
                 <h4>Daily Breakdown</h4>
-                <table class="report-table"><thead><tr><th>Date (Night)</th><th>Sales</th><th>Expenses</th><th>Profit</th></tr></thead>
-                <tbody>${dailyRows || '<tr><td colspan="4" class="text-center text-muted fst-italic">No records</td></tr>'}</tbody></table>
+                <table class="report-table"><thead><tr><th>Date</th><th>Kilos</th><th>Purchase</th><th>Sales</th><th>Expenses</th><th>Profit</th></tr></thead>
+                <tbody>${dailyRows || '<tr><td colspan="6" class="text-center text-muted fst-italic">No records</td></tr>'}</tbody></table>
                 <div class="report-footer">
                     <p>Prepared for Committee Meeting</p>
                     <p><em>Indigenous Trade Limited &mdash; Together Yumi Build</em></p>
