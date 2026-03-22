@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indigenous Trade Limited - Kava Sales Book</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom Overrides -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- ========== LANDING PAGE ========== -->
+    <div id="landingPage" class="landing-page">
+        <div class="landing-overlay"></div>
+        <div class="landing-content text-center position-relative">
+            <img src="logo.png" alt="Manples Kava Coop" class="landing-logo mb-3">
+            <h1 class="landing-title fw-800">Indigenous Trade Limited</h1>
+            <p class="landing-subtitle mb-4">Kava Sales &amp; Profit Management</p>
+            <hr class="landing-divider mx-auto mb-4">
+            <div class="d-flex gap-3 justify-content-center flex-wrap" id="roleButtons">
+                <button id="loginAdmin" class="btn btn-gold btn-lg px-4">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Login
+                </button>
+                <button id="loginUser" class="btn btn-outline-gold btn-lg px-4">
+                    <i class="bi bi-person me-2"></i>View as User
+                </button>
+            </div>
+            <!-- Admin PIN Box -->
+            <div id="adminPinBox" class="pin-box mt-4" style="display:none">
+                <label for="adminPin" class="form-label text-gold mb-2">Enter Admin PIN</label>
+                <input type="password" id="adminPin" class="form-control form-control-lg pin-input mx-auto"
+                    maxlength="6" placeholder="••••">
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                    <button id="pinSubmit" class="btn btn-gold px-4">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Enter
+                    </button>
+                    <button id="pinCancel" class="btn btn-outline-secondary px-4">Cancel</button>
+                </div>
+                <p id="pinError" class="text-danger fw-semibold mt-2 mb-0" style="display:none">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Incorrect PIN
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN APPLICATION ========== -->
+    <div id="mainApp" class="d-none">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-dark bg-surface border-bottom border-gold-subtle sticky-top">
+            <div class="container-fluid px-3 px-md-4">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                    <img src="logo.png" alt="Logo" width="36" height="36" class="rounded-circle">
+                    <span class="fw-bold text-gold">Kava Sales Book</span>
+                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="roleLabel" class="badge"></span>
+                    <button id="logoutBtn" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid px-3 px-md-4 py-4" style="max-width: 1100px;">
+            <!-- Dashboard Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card card-dash border-0 h-100">
+                        <div class="card-body text-center p-3">
+                            <div class="dash-icon text-gold mb-2"><i class="bi bi-cash-coin"></i></div>
+                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Total Sales</p>
+                            <h4 class="card-value text-gold mb-0" id="totalSales">0 VT</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card card-dash border-0 h-100">
+                        <div class="card-body text-center p-3">
+                            <div class="dash-icon text-info mb-2"><i class="bi bi-box-seam"></i></div>
+                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Total Kilos</p>
+                            <h4 class="card-value text-info mb-0" id="totalKilos">0.00 kg</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card card-dash border-0 h-100">
+                        <div class="card-body text-center p-3">
+                            <div class="dash-icon text-danger mb-2"><i class="bi bi-graph-down-arrow"></i></div>
+                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Total Expenses</p>
+                            <h4 class="card-value text-danger mb-0" id="totalExpenses">0 VT</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card card-dash border-0 h-100">
+                        <div class="card-body text-center p-3">
+                            <div class="dash-icon text-success mb-2"><i class="bi bi-graph-up-arrow"></i></div>
+                            <p class="card-subtitle text-uppercase text-muted small fw-semibold mb-1">Net Profit</p>
+                            <h4 class="card-value text-success mb-0" id="netProfit">0 VT</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="card bg-surface border-0 mb-4">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <i class="bi bi-funnel text-gold"></i>
+                        <label for="filterMonth" class="form-label mb-0 small fw-semibold text-muted">Filter:</label>
+                        <input type="month" id="filterMonth" class="form-control form-control-sm w-auto">
+                        <button id="btnFilterApply" class="btn btn-sm btn-gold">Apply</button>
+                        <button id="btnFilterClear" class="btn btn-sm btn-outline-secondary">Show All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <ul class="nav nav-pills nav-fill flex-nowrap overflow-auto mb-0 tab-nav" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation" data-role="admin">
+                    <button class="nav-link active" id="tab-btn-sales" data-bs-toggle="pill" data-bs-target="#tab-sales"
+                        type="button" role="tab">
+                        <i class="bi bi-plus-circle me-1 d-none d-md-inline"></i>Record Sale
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation" data-role="admin">
+                    <button class="nav-link" id="tab-btn-expenses" data-bs-toggle="pill" data-bs-target="#tab-expenses"
+                        type="button" role="tab">
+                        <i class="bi bi-plus-circle me-1 d-none d-md-inline"></i>Record Expense
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-btn-history" data-bs-toggle="pill" data-bs-target="#tab-history"
+                        type="button" role="tab">
+                        <i class="bi bi-clock-history me-1 d-none d-md-inline"></i>Sales
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-btn-expense-history" data-bs-toggle="pill"
+                        data-bs-target="#tab-expense-history" type="button" role="tab">
+                        <i class="bi bi-receipt me-1 d-none d-md-inline"></i>Expenses
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-btn-daily-summary" data-bs-toggle="pill"
+                        data-bs-target="#tab-daily-summary" type="button" role="tab">
+                        <i class="bi bi-calendar-check me-1 d-none d-md-inline"></i>Summary
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-btn-report" data-bs-toggle="pill" data-bs-target="#tab-report"
+                        type="button" role="tab">
+                        <i class="bi bi-file-earmark-bar-graph me-1 d-none d-md-inline"></i>Report
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content card bg-surface border-0 rounded-top-0 border-top border-gold-subtle"
+                id="mainTabContent">
+
+                <!-- Record Sale -->
+                <div class="tab-pane fade show active p-4" id="tab-sales" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-cart-plus me-2"></i>Record a Sale</h5>
+                    <form id="saleForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="saleDate" class="form-label">Date</label>
+                                <input type="date" id="saleDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="saleProduct" class="form-label">Product</label>
+                                <select id="saleProduct" class="form-select">
+                                    <option value="Kava Shell (Cup)">Kava Shell (Cup)</option>
+                                    <option value="Kava Bowl">Kava Bowl</option>
+                                    <option value="Kava Pounder (Large)">Kava Pounder (Large)</option>
+                                    <option value="Kava Bundle (Bag)">Kava Bundle (Bag)</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-12" id="customProductGroup" style="display:none">
+                                <label for="customProduct" class="form-label">Custom Product Name</label>
+                                <input type="text" id="customProduct" class="form-control"
+                                    placeholder="Enter product name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="saleKilos" class="form-label">Kilos (kg)</label>
+                                <input type="number" id="saleKilos" class="form-control" min="0.01" step="0.01" required
+                                    placeholder="0.00">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="salePricePerKilo" class="form-label">Price per Kilo (VT)</label>
+                                <input type="number" id="salePricePerKilo" class="form-control" min="0" step="0.01"
+                                    required placeholder="0.00">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="saleCustomer" class="form-label">Customer <span
+                                        class="text-muted">(optional)</span></label>
+                                <input type="text" id="saleCustomer" class="form-control" placeholder="Walk-in">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="saleNotes" class="form-label">Notes <span
+                                        class="text-muted">(optional)</span></label>
+                                <textarea id="saleNotes" rows="1" class="form-control"
+                                    placeholder="Any notes..."></textarea>
+                            </div>
+                        </div>
+                        <div
+                            class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top border-secondary">
+                            <div class="fs-5 fw-bold text-gold">
+                                Total: <span id="saleTotal">0 VT</span>
+                            </div>
+                            <button type="submit" class="btn btn-gold btn-lg px-4">
+                                <i class="bi bi-check-lg me-1"></i>Save Sale
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Record Expense -->
+                <div class="tab-pane fade p-4" id="tab-expenses" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-wallet2 me-2"></i>Record an Expense</h5>
+                    <form id="expenseForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="expenseDate" class="form-label">Date</label>
+                                <input type="date" id="expenseDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expenseCategory" class="form-label">Category</label>
+                                <select id="expenseCategory" class="form-select">
+                                    <option value="Kava Supply">Kava Supply (Raw Material)</option>
+                                    <option value="Rent">Rent</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Equipment">Equipment</option>
+                                    <option value="Staff Wages">Staff Wages</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Packaging">Packaging</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expenseDescription" class="form-label">Description</label>
+                                <input type="text" id="expenseDescription" class="form-control" required
+                                    placeholder="e.g., 10kg kava root from supplier">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expenseAmount" class="form-label">Amount (VT)</label>
+                                <input type="number" id="expenseAmount" class="form-control" min="0" step="0.01"
+                                    required placeholder="0.00">
+                            </div>
+                            <div class="col-12">
+                                <label for="expenseNotes" class="form-label">Notes <span
+                                        class="text-muted">(optional)</span></label>
+                                <textarea id="expenseNotes" rows="2" class="form-control"
+                                    placeholder="Any notes about this expense..."></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-top border-secondary text-end">
+                            <button type="submit" class="btn btn-gold btn-lg px-4">
+                                <i class="bi bi-check-lg me-1"></i>Save Expense
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Sales History -->
+                <div class="tab-pane fade p-4" id="tab-history" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Sales History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-striped align-middle mb-0" id="salesTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Kilos</th>
+                                    <th>VT/Kilo</th>
+                                    <th>Total</th>
+                                    <th>Customer</th>
+                                    <th>Notes</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted text-center py-4 fst-italic mb-0" id="noSalesMsg">No sales recorded yet.</p>
+                </div>
+
+                <!-- Expense History -->
+                <div class="tab-pane fade p-4" id="tab-expense-history" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-receipt me-2"></i>Expense History</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-striped align-middle mb-0" id="expensesTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Notes</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted text-center py-4 fst-italic mb-0" id="noExpensesMsg">No expenses recorded yet.
+                    </p>
+                </div>
+
+                <!-- Daily Summary -->
+                <div class="tab-pane fade p-4" id="tab-daily-summary" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Daily Profit Summary
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-striped align-middle mb-0" id="summaryTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Kilos Sold</th>
+                                    <th>Sales</th>
+                                    <th>Expenses</th>
+                                    <th>Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summaryTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted text-center py-4 fst-italic mb-0" id="noSummaryMsg">No records yet.</p>
+                </div>
+
+                <!-- Report -->
+                <div class="tab-pane fade p-4" id="tab-report" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-file-earmark-bar-graph me-2"></i>Committee Report
+                    </h5>
+                    <div class="d-flex align-items-end gap-3 flex-wrap mb-4">
+                        <div>
+                            <label for="reportMonth" class="form-label small">Report Period</label>
+                            <input type="month" id="reportMonth" class="form-control">
+                        </div>
+                        <button id="btnGenerateReport" class="btn btn-gold">
+                            <i class="bi bi-lightning me-1"></i>Generate Report
+                        </button>
+                        <button id="btnPrintReport" class="btn btn-outline-secondary" style="display:none">
+                            <i class="bi bi-printer me-1"></i>Print Report
+                        </button>
+                    </div>
+                    <div id="reportOutput" class="report-output" style="display:none">
+                        <div id="reportContent" class="report-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-muted small py-4 border-top border-secondary">
+            Indigenous Trade Limited &copy; 2026 &mdash; Data stored locally in your browser
+        </footer>
+    </div>
+
+    <!-- ========== CONFIRM DELETE MODAL (Bootstrap) ========== -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content bg-surface border border-danger">
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-3 d-block"></i>
+                    <p class="mb-0 fw-semibold">Are you sure you want to delete this record?</p>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pt-0">
+                    <button id="cancelDelete" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button id="confirmDelete" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:1080">
+        <div id="toast" class="toast align-items-center border-0" role="alert" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold" id="toastBody"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

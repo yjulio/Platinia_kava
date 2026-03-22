@@ -1,0 +1,556 @@
+/* ===== Root Variables & Base ===== */
+:root {
+    --gold: #d4a017;
+    --gold-hover: #b8890f;
+    --gold-subtle: rgba(212, 160, 23, 0.15);
+    --gold-glow: rgba(212, 160, 23, 0.25);
+    --surface: #1e1e1e;
+    --surface-raised: #2b2b2b;
+    --surface-hover: #333;
+    --border-subtle: #3a3a3a;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--surface);
+    min-height: 100vh;
+}
+
+/* ===== Utility Classes ===== */
+.text-gold {
+    color: var(--gold) !important;
+}
+
+.bg-surface {
+    background-color: var(--surface-raised) !important;
+}
+
+.border-gold-subtle {
+    border-color: rgba(212, 160, 23, 0.25) !important;
+}
+
+/* ===== Gold Buttons ===== */
+.btn-gold {
+    background: var(--gold);
+    color: #1a1a1a;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-gold:hover,
+.btn-gold:focus {
+    background: var(--gold-hover);
+    color: #1a1a1a;
+    box-shadow: 0 0 0 0.2rem var(--gold-glow);
+}
+
+.btn-gold:active {
+    background: #a07a0e;
+    color: #1a1a1a;
+}
+
+.btn-outline-gold {
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    background: transparent;
+    font-weight: 600;
+}
+
+.btn-outline-gold:hover,
+.btn-outline-gold:focus {
+    background: var(--gold);
+    color: #1a1a1a;
+    box-shadow: 0 0 0 0.2rem var(--gold-glow);
+}
+
+/* ===== Landing Page ===== */
+.landing-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #2a2520 0%, #151515 70%);
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+}
+
+.landing-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 80%, var(--gold-subtle) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, var(--gold-subtle) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.landing-logo {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 3px solid var(--gold);
+    box-shadow:
+        0 0 40px rgba(212, 160, 23, 0.2),
+        0 12px 40px rgba(0, 0, 0, 0.4);
+    animation: float 4s ease-in-out infinite;
+    object-fit: cover;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.landing-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: -0.5px;
+}
+
+.landing-subtitle {
+    color: #a08a60;
+    font-size: 1.1rem;
+    font-weight: 400;
+}
+
+.landing-divider {
+    width: 60px;
+    border: none;
+    border-top: 3px solid var(--gold);
+    opacity: 0.6;
+}
+
+.pin-input {
+    max-width: 180px;
+    text-align: center;
+    letter-spacing: 8px;
+    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--gold) !important;
+}
+
+.pin-input:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 0.2rem var(--gold-glow) !important;
+}
+
+.landing-page.d-none {
+    display: none !important;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+    padding: 0.6rem 0;
+    backdrop-filter: blur(8px);
+}
+
+.navbar-brand img {
+    box-shadow: 0 0 12px rgba(212, 160, 23, 0.15);
+}
+
+/* ===== Role Badges ===== */
+.badge.bg-gold {
+    background: var(--gold) !important;
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.badge.bg-secondary-subtle {
+    background: #444 !important;
+    color: #bbb;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+/* ===== Dashboard Cards ===== */
+.card-dash {
+    background: var(--surface-raised);
+    border-radius: 14px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-dash:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dash-icon {
+    font-size: 1.75rem;
+    opacity: 0.85;
+}
+
+.card-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.card-value.negative {
+    color: var(--bs-danger) !important;
+}
+
+@media (min-width: 992px) {
+    .card-value {
+        font-size: 1.75rem;
+    }
+}
+
+/* ===== Filter Bar ===== */
+.card.bg-surface {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Tab Navigation ===== */
+.tab-nav {
+    background: var(--surface-raised);
+    border-radius: 12px 12px 0 0;
+    padding: 6px 6px 0;
+    gap: 2px;
+    scrollbar-width: thin;
+}
+
+.tab-nav .nav-link {
+    color: #888;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 8px 8px 0 0;
+    padding: 10px 16px;
+    white-space: nowrap;
+    transition: color 0.2s, background 0.2s;
+    border: none;
+}
+
+.tab-nav .nav-link:hover {
+    color: #ccc;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-nav .nav-link.active {
+    color: var(--gold);
+    background: var(--surface-raised);
+    box-shadow: inset 0 -3px 0 var(--gold);
+}
+
+/* ===== Tab Content Card ===== */
+.tab-content.card {
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    min-height: 300px;
+}
+
+/* ===== Forms ===== */
+.form-control,
+.form-select {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-subtle);
+    color: #e0e0e0;
+    font-size: 0.95rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--gold);
+    box-shadow: 0 0 0 0.2rem var(--gold-glow);
+    color: #fff;
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #bbb;
+}
+
+/* ===== Tables ===== */
+.table-dark {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+    --bs-table-hover-bg: rgba(212, 160, 23, 0.06);
+}
+
+.table-dark thead th {
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-subtle);
+    white-space: nowrap;
+}
+
+.table-dark td {
+    border-color: var(--border-subtle);
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+/* Delete button in tables */
+.btn-icon-delete {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.1rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+}
+
+.btn-icon-delete:hover {
+    color: var(--bs-danger);
+    background: rgba(231, 76, 60, 0.1);
+}
+
+/* Profit colors */
+.profit-positive {
+    color: #2ecc71 !important;
+    font-weight: 700;
+}
+
+.profit-negative {
+    color: #e74c3c !important;
+    font-weight: 700;
+}
+
+.profit-zero {
+    color: #888 !important;
+    font-weight: 700;
+}
+
+/* ===== Bootstrap Toast Override ===== */
+.toast {
+    background: var(--gold) !important;
+    color: #1a1a1a !important;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+    min-width: 250px;
+}
+
+.toast.toast-error {
+    background: var(--bs-danger) !important;
+    color: #fff !important;
+}
+
+.toast .btn-close-white {
+    filter: none;
+}
+
+.toast.toast-error .btn-close-white {
+    filter: brightness(0) invert(1);
+}
+
+/* ===== Bootstrap Modal Override ===== */
+.modal-content.bg-surface {
+    background: var(--surface-raised) !important;
+}
+
+/* ===== Report ===== */
+.report-output {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 28px;
+}
+
+.report-content .report-header {
+    text-align: center;
+    margin-bottom: 24px;
+    border-bottom: 3px solid var(--gold);
+    padding-bottom: 16px;
+}
+
+.report-content .report-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+.report-content .report-header h2 {
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin-bottom: 2px;
+}
+
+.report-content .report-header h3 {
+    font-size: 1.1rem;
+    color: #999;
+    font-weight: 400;
+}
+
+.report-content .report-period {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 8px;
+    color: var(--gold);
+}
+
+.report-content .report-date {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+.report-summary-cards {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.report-card {
+    flex: 1;
+    min-width: 140px;
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    background: var(--surface-raised);
+}
+
+.report-card-label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.report-card-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #e0e0e0;
+}
+
+.report-content h4 {
+    margin: 24px 0 10px;
+    font-size: 1rem;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 6px;
+    font-weight: 700;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+}
+
+.report-table th {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 2px solid var(--border-subtle);
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.report-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: #ccc;
+}
+
+.report-footer {
+    margin-top: 30px;
+    text-align: center;
+    border-top: 2px solid var(--gold);
+    padding-top: 16px;
+    color: #888;
+}
+
+.report-footer em {
+    color: #666;
+}
+
+.signature-lines {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.sig-line {
+    text-align: center;
+}
+
+.sig-line span {
+    display: block;
+    border-top: 1px solid #666;
+    padding-top: 6px;
+    min-width: 160px;
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 50px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 576px) {
+    .landing-title {
+        font-size: 1.7rem;
+    }
+
+    .landing-logo {
+        width: 120px;
+        height: 120px;
+    }
+
+    .card-value {
+        font-size: 1.15rem;
+    }
+
+    .tab-nav .nav-link {
+        font-size: 0.78rem;
+        padding: 8px 10px;
+    }
+
+    .tab-content.card .tab-pane {
+        padding: 16px !important;
+    }
+
+    .signature-lines {
+        flex-direction: column;
+        gap: 30px;
+    }
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
