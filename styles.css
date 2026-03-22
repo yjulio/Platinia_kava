@@ -260,6 +260,17 @@ body {
     font-size: 0.95rem;
 }
 
+.form-select option,
+.form-select optgroup {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+
+.form-select optgroup {
+    font-weight: 700;
+    color: var(--gold);
+}
+
 .form-control:focus,
 .form-select:focus {
     background: rgba(255, 255, 255, 0.06);
