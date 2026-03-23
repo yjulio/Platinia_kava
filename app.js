@@ -3,23 +3,32 @@
 (function () {
     'use strict';
 
-    // ---- Data Layer ----
-    const STORAGE_KEYS = { sales: 'kava_sales', expenses: 'kava_expenses', debts: 'kava_debts', members: 'kava_members', adminPin: 'kava_admin_pin', timeout: 'kava_timeout_minutes', lockout: 'kava_lockout' };
+    // ---- Data Layer (API-backed) ----
+    const API = '/api';
     const DEFAULT_PIN = '1234';
     const MAX_PIN_ATTEMPTS = 5;
     const LOCKOUT_SECONDS = 60;
 
-    function loadData(key) {
-        try { return JSON.parse(localStorage.getItem(key)) || []; }
-        catch { return []; }
+    async function api(path, opts) {
+        const res = await fetch(API + path, {
+            headers: { 'Content-Type': 'application/json' },
+            ...opts,
+            body: opts?.body ? JSON.stringify(opts.body) : undefined,
+        });
+        return res.json();
     }
-    function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-    function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
-    let sales = loadData(STORAGE_KEYS.sales);
-    let expenses = loadData(STORAGE_KEYS.expenses);
-    let debts = loadData(STORAGE_KEYS.debts);
-    let members = loadData(STORAGE_KEYS.members);
+    async function loadAllData() {
+        const [s, e, d, m] = await Promise.all([
+            api('/sales'), api('/expenses'), api('/debts'), api('/members')
+        ]);
+        sales = s; expenses = e; debts = d; members = m;
+    }
+
+    let sales = [];
+    let expenses = [];
+    let debts = [];
+    let members = [];
     let activeFilter = null;
     let currentRole = null;
     let failedAttempts = 0;
@@ -137,7 +146,7 @@
         saleCostPerKilo.addEventListener('input', updateSaleCalc);
         saleAmount.addEventListener('input', updateSaleCalc);
 
-        saleForm.addEventListener('submit', (e) => {
+        saleForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const kilos = parseFloat(saleKilos.value);
             const costPerKilo = parseFloat(saleCostPerKilo.value);
@@ -146,22 +155,18 @@
             if (!costPerKilo || costPerKilo <= 0) { showToast('Please enter cost per kilo', true); return; }
             if (!amount || amount <= 0) { showToast('Please enter a valid amount earned', true); return; }
 
-            sales.push({
-                id: generateId(),
-                date: saleDate.value,
-                kilos,
-                costPerKilo,
-                amount,
-                notes: saleNotes.value.trim(),
+            await api('/sales', {
+                method: 'POST', body: {
+                    date: saleDate.value, kilos, costPerKilo, amount, notes: saleNotes.value.trim()
+                }
             });
-            saveData(STORAGE_KEYS.sales, sales);
             saleForm.reset();
             saleDate.value = todayISO();
             salePurchaseCost.textContent = '0 VT';
             saleNightProfit.textContent = '0 VT';
             saleNightProfit.className = 'fs-5 fw-bold text-success';
             showToast('Nightly sales recorded!');
-            refreshAll();
+            await refreshAll();
         });
     }
 
@@ -171,26 +176,26 @@
         const expenseForm = $('#expenseForm');
         expenseDate.value = todayISO();
 
-        expenseForm.addEventListener('submit', (e) => {
+        expenseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const amount = parseFloat($('#expenseAmount').value);
             const description = $('#expenseDescription').value.trim();
             if (!description) { showToast('Please enter a description', true); return; }
             if (!amount || amount < 0) { showToast('Please enter a valid amount', true); return; }
 
-            expenses.push({
-                id: generateId(),
-                date: expenseDate.value,
-                category: $('#expenseCategory').value,
-                description,
-                amount,
-                notes: $('#expenseNotes').value.trim(),
+            await api('/expenses', {
+                method: 'POST', body: {
+                    date: expenseDate.value,
+                    category: $('#expenseCategory').value,
+                    description,
+                    amount,
+                    notes: $('#expenseNotes').value.trim(),
+                }
             });
-            saveData(STORAGE_KEYS.expenses, expenses);
             expenseForm.reset();
             expenseDate.value = todayISO();
             showToast('Expense recorded!');
-            refreshAll();
+            await refreshAll();
         });
     }
 
@@ -223,9 +228,10 @@
             if (e.key === 'Enter') { e.preventDefault(); $('#confirmDelete').click(); }
         });
 
-        $('#confirmDelete').addEventListener('click', () => {
+        $('#confirmDelete').addEventListener('click', async () => {
             // Verify PIN before deleting
-            if (deletePinInput.value !== getAdminPin()) {
+            const pinCheck = await api('/auth/verify', { method: 'POST', body: { pin: deletePinInput.value } });
+            if (!pinCheck.valid) {
                 deletePinError.style.display = 'block';
                 deletePinInput.value = '';
                 deletePinInput.focus();
@@ -233,26 +239,22 @@
             }
 
             if (pendingDeleteType === 'sale') {
-                sales = sales.filter(s => s.id !== pendingDeleteId);
-                saveData(STORAGE_KEYS.sales, sales);
+                await api('/sales/' + pendingDeleteId, { method: 'DELETE' });
                 showToast('Sale deleted');
             } else if (pendingDeleteType === 'expense') {
-                expenses = expenses.filter(e => e.id !== pendingDeleteId);
-                saveData(STORAGE_KEYS.expenses, expenses);
+                await api('/expenses/' + pendingDeleteId, { method: 'DELETE' });
                 showToast('Expense deleted');
             } else if (pendingDeleteType === 'debt') {
-                debts = debts.filter(d => d.id !== pendingDeleteId);
-                saveData(STORAGE_KEYS.debts, debts);
+                await api('/debts/' + pendingDeleteId, { method: 'DELETE' });
                 showToast('Debt deleted');
             } else if (pendingDeleteType === 'member') {
-                members = members.filter(m => m.id !== pendingDeleteId);
-                saveData(STORAGE_KEYS.members, members);
+                await api('/members/' + pendingDeleteId, { method: 'DELETE' });
                 showToast('Member removed');
             }
             deleteModal.hide();
             pendingDeleteType = null;
             pendingDeleteId = null;
-            refreshAll();
+            await refreshAll();
         });
     }
 
@@ -513,7 +515,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             }
         });
 
-        debtForm.addEventListener('submit', (e) => {
+        debtForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             let member = debtMemberSel.value === '__other__' ? debtMemberOther.value.trim() : debtMemberSel.value;
             const amount = parseFloat($('#debtAmount').value);
@@ -521,23 +523,18 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             if (!member) { showToast('Select or enter a member name', true); return; }
             if (!amount || amount <= 0) { showToast('Enter a valid amount', true); return; }
 
-            debts.push({
-                id: generateId(),
-                date: debtDate.value,
-                member,
-                amount,
-                notes,
-                paid: false,
-                paidDate: null,
+            await api('/debts', {
+                method: 'POST', body: {
+                    date: debtDate.value, member, amount, notes
+                }
             });
-            saveData(STORAGE_KEYS.debts, debts);
             debtForm.reset();
             debtDate.value = todayISO();
             debtMemberOther.classList.add('d-none');
             debtMemberOther.required = false;
             populateDebtMemberDropdown();
             showToast('Debt recorded for ' + member);
-            refreshAll();
+            await refreshAll();
         });
     }
 
@@ -602,15 +599,10 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
             const markBtn = tr.querySelector('.btn-mark-paid');
             if (markBtn) {
-                markBtn.addEventListener('click', () => {
-                    const debt = debts.find(x => x.id === d.id);
-                    if (debt) {
-                        debt.paid = true;
-                        debt.paidDate = todayISO();
-                        saveData(STORAGE_KEYS.debts, debts);
-                        showToast(debt.member + '\'s debt marked as paid!');
-                        refreshAll();
-                    }
+                markBtn.addEventListener('click', async () => {
+                    await api('/debts/' + d.id + '/pay', { method: 'PUT', body: { paidDate: todayISO() } });
+                    showToast(d.member + '\'s debt marked as paid!');
+                    await refreshAll();
                 });
             }
             tr.querySelector('.btn-icon-delete').addEventListener('click', () => requestDelete('debt', d.id));
@@ -634,7 +626,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             memberFeePaidWrap.style.display = memberFeeStatus.value === 'Partial' ? '' : 'none';
         });
 
-        memberForm.addEventListener('submit', (e) => {
+        memberForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const memberId = memberIdInput.value.trim();
             const name = $('#memberName').value.trim();
@@ -647,51 +639,24 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             if (!memberId) { showToast('Enter a member ID', true); return; }
             if (!name) { showToast('Enter member name', true); return; }
 
-            // Check for duplicate ID (only when adding or changing ID)
-            if (!editingMemberId || members.find(m => m.id === editingMemberId)?.memberId !== memberId) {
-                if (members.some(m => m.memberId === memberId && m.id !== editingMemberId)) {
-                    showToast('Member ID "' + memberId + '" already exists!', true);
-                    return;
-                }
-            }
+            const body = { memberId, name, phone, role, joined: memberJoined.value, fee, feeStatus, feePaidAmount, notes };
 
             if (editingMemberId) {
-                const member = members.find(m => m.id === editingMemberId);
-                if (member) {
-                    member.memberId = memberId;
-                    member.name = name;
-                    member.phone = phone;
-                    member.role = role;
-                    member.joined = memberJoined.value;
-                    member.fee = fee;
-                    member.feeStatus = feeStatus;
-                    member.feePaidAmount = feePaidAmount;
-                    member.notes = notes;
-                }
+                const result = await api('/members/' + editingMemberId, { method: 'PUT', body });
+                if (result.error) { showToast(result.error, true); return; }
                 editingMemberId = null;
                 memberIdInput.readOnly = false;
                 $('#memberSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-1"></i>Add Member';
                 showToast('Member updated');
             } else {
-                members.push({
-                    id: generateId(),
-                    memberId,
-                    name,
-                    phone,
-                    role,
-                    joined: memberJoined.value,
-                    fee,
-                    feeStatus,
-                    feePaidAmount,
-                    notes,
-                });
+                const result = await api('/members', { method: 'POST', body });
+                if (result.error) { showToast(result.error, true); return; }
                 showToast('Member added: ' + name);
             }
-            saveData(STORAGE_KEYS.members, members);
             memberForm.reset();
             memberJoined.value = todayISO();
             memberFeePaidWrap.style.display = 'none';
-            refreshAll();
+            await refreshAll();
         });
 
         // Search
@@ -705,7 +670,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (evt) => {
+            reader.onload = async (evt) => {
                 const text = evt.target.result;
                 const lines = text.split(/\r?\n/).filter(l => l.trim());
                 if (lines.length < 2) { showToast('CSV file is empty or has no data rows', true); return; }
@@ -733,17 +698,15 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                     return;
                 }
 
-                let imported = 0, skipped = 0;
+                const bulkList = [];
+                let skipped = 0;
                 for (let i = 1; i < lines.length; i++) {
                     const cols = parseCSVLine(lines[i]);
                     const get = (key) => cols[colMap[key]]?.trim() || '';
                     const name = get('name');
                     if (!name) { skipped++; continue; }
-                    const memberId = get('memberId');
-                    if (memberId && members.some(m => m.memberId === memberId)) { skipped++; continue; }
-                    members.push({
-                        id: generateId(),
-                        memberId: memberId || '',
+                    bulkList.push({
+                        memberId: get('memberId') || '',
                         name,
                         phone: get('phone'),
                         role: get('role') || 'Member',
@@ -753,11 +716,10 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                         feePaidAmount: 0,
                         notes: get('notes'),
                     });
-                    imported++;
                 }
-                saveData(STORAGE_KEYS.members, members);
-                refreshAll();
-                showToast(imported + ' members imported' + (skipped ? ' (' + skipped + ' skipped/duplicate)' : ''));
+                const result = await api('/members/bulk', { method: 'POST', body: { members: bulkList } });
+                await refreshAll();
+                showToast(result.added + ' members imported' + (skipped ? ' (' + skipped + ' skipped/duplicate)' : ''));
                 importFile.value = '';
             };
             reader.readAsText(file);
@@ -931,7 +893,8 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     }
 
     // ---- Refresh Everything ----
-    function refreshAll() {
+    async function refreshAll() {
+        await loadAllData();
         updateDashboard();
         renderSalesTable();
         renderExpensesTable();
@@ -949,17 +912,18 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     }
 
     // ---- Landing Page & Auth ----
-    function getAdminPin() {
-        return localStorage.getItem(STORAGE_KEYS.adminPin) || DEFAULT_PIN;
+    async function getAdminPin() {
+        const r = await api('/settings/adminPin');
+        return r.value || DEFAULT_PIN;
     }
 
-    function getTimeoutMinutes() {
-        const val = localStorage.getItem(STORAGE_KEYS.timeout);
-        return val !== null ? parseInt(val) : 15;
+    async function getTimeoutMinutes() {
+        const r = await api('/settings/timeout');
+        return r.value !== null ? parseInt(r.value) : 15;
     }
 
     function isLockedOut() {
-        const saved = localStorage.getItem(STORAGE_KEYS.lockout);
+        const saved = localStorage.getItem('kava_lockout');
         if (saved) {
             const data = JSON.parse(saved);
             failedAttempts = data.attempts || 0;
@@ -973,18 +937,18 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         if (failedAttempts >= MAX_PIN_ATTEMPTS) {
             lockoutUntil = Date.now() + LOCKOUT_SECONDS * 1000;
         }
-        localStorage.setItem(STORAGE_KEYS.lockout, JSON.stringify({ attempts: failedAttempts, until: lockoutUntil }));
+        localStorage.setItem('kava_lockout', JSON.stringify({ attempts: failedAttempts, until: lockoutUntil }));
     }
 
     function clearLockout() {
         failedAttempts = 0;
         lockoutUntil = 0;
-        localStorage.removeItem(STORAGE_KEYS.lockout);
+        localStorage.removeItem('kava_lockout');
     }
 
     // ---- Session Timeout ----
-    function resetSessionTimer() {
-        const minutes = getTimeoutMinutes();
+    async function resetSessionTimer() {
+        const minutes = await getTimeoutMinutes();
         if (!minutes || !currentRole) return;
         sessionEndTime = Date.now() + minutes * 60 * 1000;
     }
@@ -992,8 +956,8 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     function startSessionMonitor() {
         resetSessionTimer();
         if (sessionTimer) clearInterval(sessionTimer);
-        sessionTimer = setInterval(() => {
-            const minutes = getTimeoutMinutes();
+        sessionTimer = setInterval(async () => {
+            const minutes = await getTimeoutMinutes();
             const countdown = $('#sessionCountdown');
             if (!minutes || !currentRole) {
                 if (countdown) countdown.textContent = 'Off';
@@ -1058,12 +1022,12 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             }, 500);
         }
 
-        function enterApp(role) {
+        async function enterApp(role) {
             currentRole = role;
             landing.classList.add('d-none');
             mainApp.classList.remove('d-none');
             applyRole();
-            refreshAll();
+            await refreshAll();
             if (role === 'admin') startSessionMonitor();
         }
 
@@ -1084,9 +1048,10 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
         loginUser.addEventListener('click', () => enterApp('user'));
 
-        pinSubmit.addEventListener('click', () => {
+        pinSubmit.addEventListener('click', async () => {
             if (isLockedOut()) { showLockoutTimer(); return; }
-            if (adminPinInput.value === getAdminPin()) {
+            const pinCheck = await api('/auth/verify', { method: 'POST', body: { pin: adminPinInput.value } });
+            if (pinCheck.valid) {
                 clearLockout();
                 enterApp('admin');
             } else {
@@ -1222,13 +1187,14 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     function initChangePinForm() {
         const form = $('#changePinForm');
         if (!form) return;
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const current = $('#currentPin').value;
             const newPin = $('#newPin').value;
             const confirm = $('#confirmNewPin').value;
 
-            if (current !== getAdminPin()) {
+            const pinCheck = await api('/auth/verify', { method: 'POST', body: { pin: current } });
+            if (!pinCheck.valid) {
                 showToast('Current PIN is incorrect', true); return;
             }
             if (newPin.length < 4) {
@@ -1244,7 +1210,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                 showToast('New PIN must be different from current', true); return;
             }
 
-            localStorage.setItem(STORAGE_KEYS.adminPin, newPin);
+            await api('/auth/pin', { method: 'PUT', body: { currentPin: current, newPin } });
             form.reset();
             showToast('Admin PIN updated successfully!');
         });
@@ -1254,16 +1220,17 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         const sel = $('#timeoutSelect');
         const btn = $('#btnSaveTimeout');
         if (!sel || !btn) return;
-        sel.value = String(getTimeoutMinutes());
-        btn.addEventListener('click', () => {
-            localStorage.setItem(STORAGE_KEYS.timeout, sel.value);
-            resetSessionTimer();
+        getTimeoutMinutes().then(v => { sel.value = String(v); });
+        btn.addEventListener('click', async () => {
+            await api('/settings/timeout', { method: 'PUT', body: { value: sel.value } });
+            await resetSessionTimer();
             showToast('Timeout set to ' + (sel.value === '0' ? 'Never' : sel.value + ' minutes'));
         });
     }
 
-    function init() {
+    async function init() {
         bsToast = new bootstrap.Toast($('#toast'), { delay: 2500 });
+        await loadAllData();
         initLanding();
         initDeleteModal();
         initSaleForm();
