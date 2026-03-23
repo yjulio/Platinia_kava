@@ -991,7 +991,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         const landing = $('#landingPage');
         const mainApp = $('#mainApp');
         const loginAdmin = $('#loginAdmin');
-        const loginUser = $('#loginUser');
         const adminPinBox = $('#adminPinBox');
         const adminPinInput = $('#adminPin');
         const pinSubmit = $('#pinSubmit');
@@ -1034,7 +1033,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         loginAdmin.addEventListener('click', () => {
             adminPinBox.style.display = 'block';
             loginAdmin.style.display = 'none';
-            loginUser.style.display = 'none';
             adminPinInput.value = '';
             pinError.style.display = 'none';
             pinLockout.style.display = 'none';
@@ -1045,8 +1043,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                 adminPinInput.focus();
             }
         });
-
-        loginUser.addEventListener('click', () => enterApp('user'));
 
         pinSubmit.addEventListener('click', async () => {
             if (isLockedOut()) { showLockoutTimer(); return; }
@@ -1074,7 +1070,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         pinCancel.addEventListener('click', () => {
             adminPinBox.style.display = 'none';
             loginAdmin.style.display = '';
-            loginUser.style.display = '';
             pinError.style.display = 'none';
         });
 
@@ -1085,7 +1080,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             landing.classList.remove('d-none');
             adminPinBox.style.display = 'none';
             loginAdmin.style.display = '';
-            loginUser.style.display = '';
             history.replaceState(null, '', location.pathname);
         });
     }
