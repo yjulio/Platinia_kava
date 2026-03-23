@@ -4,13 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indigenous Cooperative Marketing and Trading Society Limited</title>
-    <meta name="description"
-        content="Vanuatu's premier kava cooperative — connecting growers, ensuring quality, and empowering communities through fair trade.">
+    <title>Indigenous Trade Limited - Kava Sales Book</title>
+    <meta name="description" content="Kava Sales & Profit Management for Manples Kava Coop">
     <!-- Open Graph (link previews) -->
-    <meta property="og:title" content="Indigenous Cooperative Marketing and Trading Society Limited">
-    <meta property="og:description"
-        content="Vanuatu's premier kava cooperative — connecting growers, ensuring quality, and empowering communities through fair trade.">
+    <meta property="og:title" content="Indigenous Trade Limited - Kava Sales Book">
+    <meta property="og:description" content="Kava Sales & Profit Management for Manples Kava Coop">
     <meta property="og:image" content="https://kavacoop.innovatelhubltd.com/logo.png">
     <meta property="og:url" content="https://kavacoop.innovatelhubltd.com/">
     <meta property="og:type" content="website">
@@ -30,233 +28,40 @@
 
 <body>
     <!-- ========== LANDING PAGE ========== -->
-    <div id="landingPage">
-
-        <!-- — Site Navbar — -->
-        <nav class="navbar navbar-dark navbar-expand-lg site-navbar fixed-top">
-            <div class="container">
-                <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-                    <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle">
-                    <span class="fw-bold text-gold d-none d-sm-inline">ICMTS Limited</span>
-                </a>
-                <button class="navbar-toggler border-gold-subtle" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#siteNav">
-                    <span class="navbar-toggler-icon"></span>
+    <div id="landingPage" class="landing-page">
+        <div class="landing-overlay"></div>
+        <div class="landing-content text-center position-relative">
+            <img src="logo.png" alt="Manples Kava Coop" class="landing-logo mb-3">
+            <h1 class="landing-title fw-800">Indigenous Cooperative Marketing and Trading Society Limited</h1>
+            <p class="landing-subtitle mb-4">Kava Sales &amp; Profit Management</p>
+            <hr class="landing-divider mx-auto mb-4">
+            <div class="d-flex gap-3 justify-content-center flex-wrap" id="roleButtons">
+                <button id="loginAdmin" class="btn btn-gold btn-lg px-4">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Login
                 </button>
-                <div class="collapse navbar-collapse" id="siteNav">
-                    <ul class="navbar-nav ms-auto gap-1">
-                        <li class="nav-item"><a class="nav-link" href="#heroSection">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#aboutSection">About</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#servicesSection">Services</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#contactSection">Contact</a></li>
-                        <li class="nav-item"><a class="nav-link text-gold fw-semibold" href="#portalSection">Member
-                                Portal</a></li>
-                    </ul>
-                </div>
+                <button id="loginUser" class="btn btn-outline-gold btn-lg px-4">
+                    <i class="bi bi-person me-2"></i>View as User
+                </button>
             </div>
-        </nav>
-
-        <!-- — Hero Section — -->
-        <section id="heroSection" class="hero-section">
-            <div class="hero-overlay"></div>
-            <div class="container position-relative text-center">
-                <img src="logo.png" alt="Indigenous Cooperative Marketing and Trading Society Limited"
-                    class="hero-logo mb-4">
-                <h1 class="hero-title fw-800">Indigenous Cooperative Marketing<br class="d-none d-md-inline"> and
-                    Trading Society Limited</h1>
-                <p class="hero-tagline mb-4">Empowering Vanuatu's kava growers through cooperative marketing,<br
-                        class="d-none d-md-inline"> fair trade, and community development.</p>
-                <div class="d-flex gap-3 justify-content-center flex-wrap">
-                    <a href="#aboutSection" class="btn btn-gold btn-lg px-4">
-                        <i class="bi bi-info-circle me-2"></i>Learn More
-                    </a>
-                    <a href="#portalSection" class="btn btn-outline-gold btn-lg px-4">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Member Portal
-                    </a>
+            <!-- Admin PIN Box -->
+            <div id="adminPinBox" class="pin-box mt-4" style="display:none">
+                <label for="adminPin" class="form-label text-gold mb-2">Enter Admin PIN</label>
+                <input type="password" id="adminPin" class="form-control form-control-lg pin-input mx-auto"
+                    maxlength="6" placeholder="••••">
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                    <button id="pinSubmit" class="btn btn-gold px-4">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Enter
+                    </button>
+                    <button id="pinCancel" class="btn btn-outline-secondary px-4">Cancel</button>
                 </div>
+                <p id="pinError" class="text-danger fw-semibold mt-2 mb-0" style="display:none">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Incorrect PIN
+                </p>
+                <p id="pinLockout" class="text-warning fw-semibold mt-2 mb-0" style="display:none">
+                    <i class="bi bi-lock me-1"></i>Too many attempts. Locked for <span id="lockoutTimer">60</span>s
+                </p>
             </div>
-        </section>
-
-        <!-- — About Section — -->
-        <section id="aboutSection" class="site-section">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <h2 class="section-heading">About Us</h2>
-                    <div class="section-divider mx-auto"></div>
-                </div>
-                <div class="row align-items-center g-5">
-                    <div class="col-lg-6">
-                        <h3 class="text-gold mb-3">Who We Are</h3>
-                        <p class="text-light-muted">
-                            The <strong class="text-gold">Indigenous Cooperative Marketing and Trading Society
-                                Limited</strong>
-                            — known locally as <strong>Manples Kava Coop</strong> — is a community-owned cooperative
-                            dedicated to the sustainable production, marketing, and export of premium Ni-Vanuatu kava.
-                        </p>
-                        <p class="text-light-muted">
-                            Founded on the principles of fair trade and collective empowerment, we bring together
-                            growers from across the islands to ensure they receive fair prices while delivering
-                            the highest quality kava to markets domestically and internationally.
-                        </p>
-                        <p class="text-light-muted mb-0">
-                            Our mission is to strengthen rural livelihoods, preserve indigenous agricultural
-                            knowledge, and build a thriving cooperative economy for generations to come.
-                        </p>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="about-stats-grid">
-                            <div class="stat-card">
-                                <i class="bi bi-people-fill stat-icon"></i>
-                                <h3 class="stat-number text-gold">50+</h3>
-                                <p class="stat-label">Cooperative Members</p>
-                            </div>
-                            <div class="stat-card">
-                                <i class="bi bi-globe-americas stat-icon"></i>
-                                <h3 class="stat-number text-gold">Vanuatu</h3>
-                                <p class="stat-label">Proudly Local</p>
-                            </div>
-                            <div class="stat-card">
-                                <i class="bi bi-tree stat-icon"></i>
-                                <h3 class="stat-number text-gold">100%</h3>
-                                <p class="stat-label">Organic Kava</p>
-                            </div>
-                            <div class="stat-card">
-                                <i class="bi bi-award stat-icon"></i>
-                                <h3 class="stat-number text-gold">Premium</h3>
-                                <p class="stat-label">Quality Guaranteed</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- — Services Section — -->
-        <section id="servicesSection" class="site-section bg-surface-alt">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <h2 class="section-heading">What We Do</h2>
-                    <div class="section-divider mx-auto"></div>
-                </div>
-                <div class="row g-4">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="service-card text-center h-100">
-                            <div class="service-icon mb-3"><i class="bi bi-box-seam"></i></div>
-                            <h5 class="text-gold mb-2">Kava Trading</h5>
-                            <p class="text-light-muted small">Buying and selling premium kava at fair market
-                                prices, ensuring growers get the best returns for their harvest.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <div class="service-card text-center h-100">
-                            <div class="service-icon mb-3"><i class="bi bi-megaphone"></i></div>
-                            <h5 class="text-gold mb-2">Cooperative Marketing</h5>
-                            <p class="text-light-muted small">Collective marketing strategies that amplify
-                                our reach and open new markets for Ni-Vanuatu kava.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <div class="service-card text-center h-100">
-                            <div class="service-icon mb-3"><i class="bi bi-shield-check"></i></div>
-                            <h5 class="text-gold mb-2">Quality Assurance</h5>
-                            <p class="text-light-muted small">Rigorous quality control from farm to market,
-                                ensuring only the finest kava carries our name.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <div class="service-card text-center h-100">
-                            <div class="service-icon mb-3"><i class="bi bi-people"></i></div>
-                            <h5 class="text-gold mb-2">Member Support</h5>
-                            <p class="text-light-muted small">Financial management tools, training programs,
-                                and resources to help our members grow and succeed.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- — Contact Section — -->
-        <section id="contactSection" class="site-section">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <h2 class="section-heading">Get In Touch</h2>
-                    <div class="section-divider mx-auto"></div>
-                </div>
-                <div class="row g-4 justify-content-center">
-                    <div class="col-md-4 text-center">
-                        <div class="contact-card">
-                            <i class="bi bi-geo-alt-fill contact-icon text-gold"></i>
-                            <h6 class="text-gold mt-3 mb-2">Location</h6>
-                            <p class="text-light-muted small mb-0">Port Vila, Vanuatu</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="contact-card">
-                            <i class="bi bi-envelope-fill contact-icon text-gold"></i>
-                            <h6 class="text-gold mt-3 mb-2">Email</h6>
-                            <p class="text-light-muted small mb-0">info@icmtslimited.com</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="contact-card">
-                            <i class="bi bi-telephone-fill contact-icon text-gold"></i>
-                            <h6 class="text-gold mt-3 mb-2">Phone</h6>
-                            <p class="text-light-muted small mb-0">+678 XXXX XXX</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- — Member Portal Section — -->
-        <section id="portalSection" class="site-section bg-surface-alt">
-            <div class="container">
-                <div class="text-center mb-4">
-                    <h2 class="section-heading">Member Portal</h2>
-                    <div class="section-divider mx-auto"></div>
-                    <p class="text-light-muted mt-3">Access the Kava Sales &amp; Profit Management system.</p>
-                </div>
-                <div class="portal-box mx-auto text-center">
-                    <img src="logo.png" alt="Logo" class="portal-logo mb-3">
-                    <div class="d-flex gap-3 justify-content-center flex-wrap mb-3" id="roleButtons">
-                        <button id="loginAdmin" class="btn btn-gold btn-lg px-4">
-                            <i class="bi bi-shield-lock me-2"></i>Admin Login
-                        </button>
-                        <button id="loginUser" class="btn btn-outline-gold btn-lg px-4">
-                            <i class="bi bi-person me-2"></i>View as User
-                        </button>
-                    </div>
-                    <!-- Admin PIN Box -->
-                    <div id="adminPinBox" class="pin-box mt-3" style="display:none">
-                        <label for="adminPin" class="form-label text-gold mb-2">Enter Admin PIN</label>
-                        <input type="password" id="adminPin" class="form-control form-control-lg pin-input mx-auto"
-                            maxlength="6" placeholder="••••">
-                        <div class="d-flex gap-2 justify-content-center mt-3">
-                            <button id="pinSubmit" class="btn btn-gold px-4">
-                                <i class="bi bi-arrow-right-circle me-1"></i>Enter
-                            </button>
-                            <button id="pinCancel" class="btn btn-outline-secondary px-4">Cancel</button>
-                        </div>
-                        <p id="pinError" class="text-danger fw-semibold mt-2 mb-0" style="display:none">
-                            <i class="bi bi-exclamation-triangle me-1"></i>Incorrect PIN
-                        </p>
-                        <p id="pinLockout" class="text-warning fw-semibold mt-2 mb-0" style="display:none">
-                            <i class="bi bi-lock me-1"></i>Too many attempts. Locked for <span
-                                id="lockoutTimer">60</span>s
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- — Site Footer — -->
-        <footer class="site-footer text-center">
-            <div class="container">
-                <img src="logo.png" alt="Logo" width="48" height="48" class="rounded-circle mb-2 opacity-75">
-                <p class="mb-1 text-gold small fw-semibold">Indigenous Trade Limited &copy; 2026</p>
-                <p class="mb-0 text-muted small">Powered by IHS</p>
-            </div>
-        </footer>
+        </div>
     </div>
 
     <!-- ========== MAIN APPLICATION ========== -->
@@ -1029,16 +834,6 @@
             window.addEventListener('resize', checkScroll);
             setTimeout(checkScroll, 200);
         })();
-
-        // Auto-close mobile navbar on link click
-        document.querySelectorAll('#siteNav .nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                const navCollapse = document.getElementById('siteNav');
-                if (navCollapse.classList.contains('show')) {
-                    bootstrap.Collapse.getInstance(navCollapse)?.hide();
-                }
-            });
-        });
     </script>
 </body>
 
