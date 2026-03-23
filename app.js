@@ -1231,7 +1231,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
     async function init() {
         bsToast = new bootstrap.Toast($('#toast'), { delay: 2500 });
-        await loadAllData();
+        try { await loadAllData(); } catch (e) { console.error('Failed to load data:', e); }
         initLanding();
         initDeleteModal();
         initSaleForm();

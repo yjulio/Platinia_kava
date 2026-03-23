@@ -1,12 +1,12 @@
 // ===== Kava Sales Book — Service Worker =====
 'use strict';
 
-const CACHE_VERSION = 'kava-v1';
+const CACHE_VERSION = 'kava-v2';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
-    '/app.js',
-    '/styles.css',
+    '/app.js?v=2',
+    '/styles.css?v=2',
     '/logo.png',
     '/manifest.json',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
