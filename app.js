@@ -754,6 +754,64 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         });
     }
 
+    // ---- Render Read-Only Members Directory ----
+    function renderViewMembersTable() {
+        const searchVal = ($('#viewMemberSearch')?.value || '').toLowerCase();
+        const filtered = members
+            .filter(m => !searchVal || m.name.toLowerCase().includes(searchVal) || (m.role || '').toLowerCase().includes(searchVal) || (m.phone || '').includes(searchVal) || (m.memberId || '').toLowerCase().includes(searchVal))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        const tbody = $('#viewMembersTableBody');
+        const noMsg = $('#noViewMembersMsg');
+        if (!tbody) return;
+        noMsg.style.display = filtered.length ? 'none' : 'block';
+        tbody.innerHTML = '';
+        $('#viewMemberCount').textContent = members.length;
+
+        const totalFees = members.reduce((sum, m) => sum + (m.fee || 0), 0);
+        const collected = members.reduce((sum, m) => {
+            if (m.feeStatus === 'Paid') return sum + (m.fee || 0);
+            if (m.feeStatus === 'Partial') return sum + (m.feePaidAmount || 0);
+            return sum;
+        }, 0);
+        $('#viewFeesCollected').textContent = formatCurrency(collected);
+        $('#viewFeesOutstanding').textContent = formatCurrency(totalFees - collected);
+
+        const roleBadgeColors = {
+            'Chairman': 'bg-gold text-dark',
+            'Treasurer': 'bg-info text-dark',
+            'Secretary': 'bg-primary',
+            'Committee': 'bg-warning text-dark',
+            'Staff': 'bg-secondary',
+            'Member': 'bg-secondary bg-opacity-50',
+        };
+
+        const feeStatusBadges = {
+            'Paid': '<span class="badge bg-success">Paid</span>',
+            'Partial': '',
+            'Exempt': '<span class="badge bg-secondary">Exempt</span>',
+            'Unpaid': '<span class="badge bg-warning text-dark">Unpaid</span>',
+        };
+
+        filtered.forEach(m => {
+            const tr = document.createElement('tr');
+            const badgeClass = roleBadgeColors[m.role] || 'bg-secondary bg-opacity-50';
+            const feeBadge = m.feeStatus === 'Partial'
+                ? '<span class="badge bg-info text-dark">Partial (' + formatCurrency(m.feePaidAmount || 0) + ')</span>'
+                : (feeStatusBadges[m.feeStatus] || feeStatusBadges['Unpaid']);
+            tr.innerHTML = `
+                <td><span class="badge bg-dark border border-gold-subtle text-gold fw-bold">${escapeHtml(m.memberId || '—')}</span></td>
+                <td><strong>${escapeHtml(m.name)}</strong></td>
+                <td class="text-muted">${escapeHtml(m.phone || '—')}</td>
+                <td><span class="badge ${badgeClass}">${escapeHtml(m.role || 'Member')}</span></td>
+                <td class="text-muted">${escapeHtml(m.joined || '—')}</td>
+                <td class="fw-bold">${m.fee ? formatCurrency(m.fee) : '—'}</td>
+                <td>${feeBadge}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
     // ---- Refresh Everything ----
     function refreshAll() {
         updateDashboard();
@@ -762,6 +820,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         renderDailySummary();
         renderDebtsTable();
         renderMembersTable();
+        renderViewMembersTable();
         populateDebtMemberDropdown();
         if (currentRole) {
             const isAdmin = currentRole === 'admin';
@@ -1041,6 +1100,9 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         initReport();
         initChangePinForm();
         initTimeoutSettings();
+        // View Members search
+        const viewSearch = $('#viewMemberSearch');
+        if (viewSearch) viewSearch.addEventListener('input', () => renderViewMembersTable());
         refreshAll();
     }
 

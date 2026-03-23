@@ -169,10 +169,16 @@
                         <i class="bi bi-person-exclamation me-1 d-none d-md-inline"></i>Debts
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-btn-view-members" data-bs-toggle="pill"
+                        data-bs-target="#tab-view-members" type="button" role="tab">
+                        <i class="bi bi-people me-1 d-none d-md-inline"></i>Members
+                    </button>
+                </li>
                 <li class="nav-item" role="presentation" data-role="admin">
                     <button class="nav-link" id="tab-btn-members" data-bs-toggle="pill" data-bs-target="#tab-members"
                         type="button" role="tab">
-                        <i class="bi bi-people me-1 d-none d-md-inline"></i>Members
+                        <i class="bi bi-gear me-1 d-none d-md-inline"></i>Manage Members
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -182,8 +188,8 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation" data-role="admin">
-                    <button class="nav-link" id="tab-btn-security" data-bs-toggle="pill"
-                        data-bs-target="#tab-security" type="button" role="tab">
+                    <button class="nav-link" id="tab-btn-security" data-bs-toggle="pill" data-bs-target="#tab-security"
+                        type="button" role="tab">
                         <i class="bi bi-shield-lock me-1 d-none d-md-inline"></i>Security
                     </button>
                 </li>
@@ -460,6 +466,58 @@
                     <p class="text-muted text-center py-4 fst-italic mb-0" id="noDebtsMsg">No debts recorded yet.</p>
                 </div>
 
+                <!-- View Members (All Users) -->
+                <div class="tab-pane fade p-4" id="tab-view-members" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-people me-2"></i>Member Directory</h5>
+
+                    <!-- Summary Cards -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Total Members</small>
+                                <span class="fs-5 fw-bold text-gold" id="viewMemberCount">0</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Fees Collected</small>
+                                <span class="fs-5 fw-bold text-success" id="viewFeesCollected">0 VT</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Fees Outstanding</small>
+                                <span class="fs-5 fw-bold text-danger" id="viewFeesOutstanding">0 VT</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="d-flex justify-content-end mb-3">
+                        <input type="text" id="viewMemberSearch" class="form-control form-control-sm w-auto"
+                            placeholder="Search members..." style="max-width: 220px;">
+                    </div>
+
+                    <!-- Read-only Members Table -->
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-striped align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                    <th>Fee</th>
+                                    <th>Fee Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="viewMembersTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted text-center py-4 fst-italic mb-0" id="noViewMembersMsg">No members yet.</p>
+                </div>
+
                 <!-- Members Management -->
                 <div class="tab-pane fade p-4" id="tab-members" role="tabpanel">
                     <h5 class="text-gold fw-bold mb-3"><i class="bi bi-people me-2"></i>Members Management</h5>
@@ -577,15 +635,18 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label for="currentPin" class="form-label">Current PIN</label>
-                                        <input type="password" id="currentPin" class="form-control" maxlength="8" required placeholder="Enter current PIN">
+                                        <input type="password" id="currentPin" class="form-control" maxlength="8"
+                                            required placeholder="Enter current PIN">
                                     </div>
                                     <div class="col-md-4">
                                         <label for="newPin" class="form-label">New PIN</label>
-                                        <input type="password" id="newPin" class="form-control" maxlength="8" required placeholder="Min 4 digits">
+                                        <input type="password" id="newPin" class="form-control" maxlength="8" required
+                                            placeholder="Min 4 digits">
                                     </div>
                                     <div class="col-md-4">
                                         <label for="confirmNewPin" class="form-label">Confirm New PIN</label>
-                                        <input type="password" id="confirmNewPin" class="form-control" maxlength="8" required placeholder="Re-enter new PIN">
+                                        <input type="password" id="confirmNewPin" class="form-control" maxlength="8"
+                                            required placeholder="Re-enter new PIN">
                                     </div>
                                 </div>
                                 <div class="mt-3 text-end">
@@ -600,8 +661,10 @@
                     <!-- Session Timeout Setting -->
                     <div class="card bg-surface-raised border border-gold-subtle mb-4">
                         <div class="card-body">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-2 text-gold"></i>Auto-Logout Timer</h6>
-                            <p class="text-muted small mb-3">Automatically log out after a period of inactivity to protect your data.</p>
+                            <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-2 text-gold"></i>Auto-Logout Timer
+                            </h6>
+                            <p class="text-muted small mb-3">Automatically log out after a period of inactivity to
+                                protect your data.</p>
                             <div class="row g-3 align-items-end">
                                 <div class="col-md-4">
                                     <label for="timeoutSelect" class="form-label">Timeout Duration</label>
@@ -620,7 +683,8 @@
                                     </button>
                                 </div>
                                 <div class="col-md-4 text-end">
-                                    <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Session time remaining: <strong id="sessionCountdown" class="text-gold">--:--</strong></span>
+                                    <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>Session time
+                                        remaining: <strong id="sessionCountdown" class="text-gold">--:--</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -631,11 +695,16 @@
                         <div class="card-body">
                             <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-gold"></i>Security Info</h6>
                             <ul class="small text-muted mb-0 list-unstyled">
-                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>PIN required for admin access</li>
-                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Account locks after 5 failed PIN attempts (60 second cooldown)</li>
-                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Auto-logout on inactivity</li>
-                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>PIN confirmation required for deleting records</li>
-                                <li class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>All data stored locally on this device only</li>
+                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>PIN required for
+                                    admin access</li>
+                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Account locks after
+                                    5 failed PIN attempts (60 second cooldown)</li>
+                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Auto-logout on
+                                    inactivity</li>
+                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>PIN confirmation
+                                    required for deleting records</li>
+                                <li class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>All data stored
+                                    locally on this device only</li>
                             </ul>
                         </div>
                     </div>
@@ -678,8 +747,11 @@
                     <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-3 d-block"></i>
                     <p class="fw-semibold mb-3">Are you sure you want to delete this record?</p>
                     <div class="mb-0">
-                        <label for="deletePinInput" class="form-label small text-muted">Enter Admin PIN to confirm</label>
-                        <input type="password" id="deletePinInput" class="form-control form-control-sm pin-input mx-auto" maxlength="8" placeholder="••••" style="max-width:160px">
+                        <label for="deletePinInput" class="form-label small text-muted">Enter Admin PIN to
+                            confirm</label>
+                        <input type="password" id="deletePinInput"
+                            class="form-control form-control-sm pin-input mx-auto" maxlength="8" placeholder="••••"
+                            style="max-width:160px">
                         <p id="deletePinError" class="text-danger small mt-1 mb-0" style="display:none">Wrong PIN</p>
                     </div>
                 </div>
