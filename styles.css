@@ -110,10 +110,12 @@ body {
 }
 
 .landing-title {
-    font-size: 2.4rem;
-    font-weight: 800;
+    font-family: 'Graffiti Stream Extrude', 'Inter', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 400;
     color: var(--gold);
-    letter-spacing: -0.5px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .landing-subtitle {
@@ -663,7 +665,7 @@ body {
 /* ===== Small Phone Responsive ===== */
 @media (max-width: 576px) {
     .landing-title {
-        font-size: 1.7rem;
+        font-size: 1.9rem;
     }
 
     .landing-logo {
