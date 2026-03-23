@@ -568,7 +568,14 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         const memberForm = $('#memberForm');
         const memberJoined = $('#memberJoined');
         const memberIdInput = $('#memberIdInput');
+        const memberFeeStatus = $('#memberFeeStatus');
+        const memberFeePaidWrap = $('#memberFeePaidAmountWrap');
         memberJoined.value = todayISO();
+
+        // Show/hide partial paid amount field
+        memberFeeStatus.addEventListener('change', () => {
+            memberFeePaidWrap.style.display = memberFeeStatus.value === 'Partial' ? '' : 'none';
+        });
 
         memberForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -576,6 +583,9 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             const name = $('#memberName').value.trim();
             const phone = $('#memberPhone').value.trim();
             const role = $('#memberRole').value;
+            const fee = parseFloat($('#memberFee').value) || 0;
+            const feeStatus = memberFeeStatus.value;
+            const feePaidAmount = feeStatus === 'Partial' ? (parseFloat($('#memberFeePaidAmount').value) || 0) : (feeStatus === 'Paid' ? fee : 0);
             const notes = $('#memberNotes').value.trim();
             if (!memberId) { showToast('Enter a member ID', true); return; }
             if (!name) { showToast('Enter member name', true); return; }
@@ -596,6 +606,9 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                     member.phone = phone;
                     member.role = role;
                     member.joined = memberJoined.value;
+                    member.fee = fee;
+                    member.feeStatus = feeStatus;
+                    member.feePaidAmount = feePaidAmount;
                     member.notes = notes;
                 }
                 editingMemberId = null;
@@ -610,6 +623,9 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                     phone,
                     role,
                     joined: memberJoined.value,
+                    fee,
+                    feeStatus,
+                    feePaidAmount,
                     notes,
                 });
                 showToast('Member added: ' + name);
@@ -617,6 +633,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             saveData(STORAGE_KEYS.members, members);
             memberForm.reset();
             memberJoined.value = todayISO();
+            memberFeePaidWrap.style.display = 'none';
             refreshAll();
         });
 
@@ -633,6 +650,10 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         $('#memberPhone').value = m.phone || '';
         $('#memberRole').value = m.role || 'Member';
         $('#memberJoined').value = m.joined || '';
+        $('#memberFee').value = m.fee || '';
+        $('#memberFeeStatus').value = m.feeStatus || 'Unpaid';
+        $('#memberFeePaidAmountWrap').style.display = (m.feeStatus === 'Partial') ? '' : 'none';
+        $('#memberFeePaidAmount').value = m.feePaidAmount || '';
         $('#memberNotes').value = m.notes || '';
         $('#memberSubmitBtn').innerHTML = '<i class="bi bi-pencil me-1"></i>Update Member';
         // Scroll to form
@@ -653,6 +674,16 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         tbody.innerHTML = '';
         $('#memberCount').textContent = members.length;
 
+        // Fee summary
+        const totalFees = members.reduce((sum, m) => sum + (m.fee || 0), 0);
+        const collected = members.reduce((sum, m) => {
+            if (m.feeStatus === 'Paid') return sum + (m.fee || 0);
+            if (m.feeStatus === 'Partial') return sum + (m.feePaidAmount || 0);
+            return sum;
+        }, 0);
+        $('#feesCollected').textContent = formatCurrency(collected);
+        $('#feesOutstanding').textContent = formatCurrency(totalFees - collected);
+
         const roleBadgeColors = {
             'Chairman': 'bg-gold text-dark',
             'Treasurer': 'bg-info text-dark',
@@ -666,12 +697,21 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             const tr = document.createElement('tr');
             const badgeClass = roleBadgeColors[m.role] || 'bg-secondary bg-opacity-50';
 
+            const feeStatusBadge = {
+                'Paid': '<span class="badge bg-success">Paid</span>',
+                'Partial': '<span class="badge bg-info text-dark">Partial (' + formatCurrency(m.feePaidAmount || 0) + ')</span>',
+                'Exempt': '<span class="badge bg-secondary">Exempt</span>',
+                'Unpaid': '<span class="badge bg-warning text-dark">Unpaid</span>',
+            };
+
             tr.innerHTML = `
                 <td><span class="badge bg-dark border border-gold-subtle text-gold fw-bold">${escapeHtml(m.memberId || '—')}</span></td>
                 <td><strong>${escapeHtml(m.name)}</strong></td>
                 <td class="text-muted">${escapeHtml(m.phone || '—')}</td>
                 <td><span class="badge ${badgeClass}">${escapeHtml(m.role || 'Member')}</span></td>
                 <td class="text-muted">${escapeHtml(m.joined || '—')}</td>
+                <td class="fw-bold">${m.fee ? formatCurrency(m.fee) : '—'}</td>
+                <td>${feeStatusBadge[m.feeStatus] || feeStatusBadge['Unpaid']}</td>
                 <td class="text-muted">${escapeHtml(m.notes || '—')}</td>
                 <td class="text-center text-nowrap">
                     <button class="btn btn-sm btn-outline-gold btn-edit-member me-1" title="Edit"><i class="bi bi-pencil"></i></button>

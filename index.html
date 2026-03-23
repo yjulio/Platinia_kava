@@ -489,6 +489,23 @@
                                     <label for="memberJoined" class="form-label">Date Joined</label>
                                     <input type="date" id="memberJoined" class="form-control" required>
                                 </div>
+                                <div class="col-md-4">
+                                    <label for="memberFee" class="form-label">Membership Fee (VT)</label>
+                                    <input type="number" id="memberFee" class="form-control" min="0" step="1" placeholder="e.g. 5000">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="memberFeeStatus" class="form-label">Fee Status</label>
+                                    <select id="memberFeeStatus" class="form-select">
+                                        <option value="Unpaid">Unpaid</option>
+                                        <option value="Paid">Paid</option>
+                                        <option value="Partial">Partial</option>
+                                        <option value="Exempt">Exempt</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4" id="memberFeePaidAmountWrap" style="display:none">
+                                    <label for="memberFeePaidAmount" class="form-label">Amount Paid (VT)</label>
+                                    <input type="number" id="memberFeePaidAmount" class="form-control" min="0" step="1" placeholder="e.g. 2500">
+                                </div>
                                 <div class="col-md-8">
                                     <label for="memberNotes" class="form-label">Notes <span
                                             class="text-muted">(optional)</span></label>
@@ -523,6 +540,8 @@
                                     <th>Phone</th>
                                     <th>Role</th>
                                     <th>Joined</th>
+                                    <th>Fee</th>
+                                    <th>Fee Status</th>
                                     <th>Notes</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
