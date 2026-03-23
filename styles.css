@@ -91,10 +91,7 @@ body {
 .landing-logo {
     width: 320px;
     height: 320px;
-    border-radius: 50%;
-    border: 3px solid var(--gold);
     box-shadow:
-        0 0 40px rgba(212, 160, 23, 0.2),
         0 12px 40px rgba(0, 0, 0, 0.4);
     animation: float 4s ease-in-out infinite;
     object-fit: cover;
