@@ -564,31 +564,34 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     // ---- Member Form ----
     let editingMemberId = null;
 
-    function nextMemberId() {
-        const nums = members.map(m => {
-            const match = (m.memberId || '').match(/^M(\d+)$/);
-            return match ? parseInt(match[1], 10) : 0;
-        });
-        const max = nums.length ? Math.max(...nums) : 0;
-        return 'M' + String(max + 1).padStart(3, '0');
-    }
-
     function initMemberForm() {
         const memberForm = $('#memberForm');
         const memberJoined = $('#memberJoined');
+        const memberIdInput = $('#memberIdInput');
         memberJoined.value = todayISO();
 
         memberForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const memberId = memberIdInput.value.trim();
             const name = $('#memberName').value.trim();
             const phone = $('#memberPhone').value.trim();
             const role = $('#memberRole').value;
             const notes = $('#memberNotes').value.trim();
+            if (!memberId) { showToast('Enter a member ID', true); return; }
             if (!name) { showToast('Enter member name', true); return; }
+
+            // Check for duplicate ID (only when adding or changing ID)
+            if (!editingMemberId || members.find(m => m.id === editingMemberId)?.memberId !== memberId) {
+                if (members.some(m => m.memberId === memberId && m.id !== editingMemberId)) {
+                    showToast('Member ID "' + memberId + '" already exists!', true);
+                    return;
+                }
+            }
 
             if (editingMemberId) {
                 const member = members.find(m => m.id === editingMemberId);
                 if (member) {
+                    member.memberId = memberId;
                     member.name = name;
                     member.phone = phone;
                     member.role = role;
@@ -596,12 +599,13 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                     member.notes = notes;
                 }
                 editingMemberId = null;
+                memberIdInput.readOnly = false;
                 $('#memberSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-1"></i>Add Member';
                 showToast('Member updated');
             } else {
                 members.push({
                     id: generateId(),
-                    memberId: nextMemberId(),
+                    memberId,
                     name,
                     phone,
                     role,
@@ -624,6 +628,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         const m = members.find(x => x.id === id);
         if (!m) return;
         editingMemberId = id;
+        $('#memberIdInput').value = m.memberId || '';
         $('#memberName').value = m.name;
         $('#memberPhone').value = m.phone || '';
         $('#memberRole').value = m.role || 'Member';
