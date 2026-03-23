@@ -4,8 +4,10 @@
     'use strict';
 
     // ---- Data Layer ----
-    const STORAGE_KEYS = { sales: 'kava_sales', expenses: 'kava_expenses', debts: 'kava_debts', members: 'kava_members', adminPin: 'kava_admin_pin' };
+    const STORAGE_KEYS = { sales: 'kava_sales', expenses: 'kava_expenses', debts: 'kava_debts', members: 'kava_members', adminPin: 'kava_admin_pin', timeout: 'kava_timeout_minutes', lockout: 'kava_lockout' };
     const DEFAULT_PIN = '1234';
+    const MAX_PIN_ATTEMPTS = 5;
+    const LOCKOUT_SECONDS = 60;
 
     function loadData(key) {
         try { return JSON.parse(localStorage.getItem(key)) || []; }
@@ -20,6 +22,10 @@
     let members = loadData(STORAGE_KEYS.members);
     let activeFilter = null;
     let currentRole = null;
+    let failedAttempts = 0;
+    let lockoutUntil = 0;
+    let sessionTimer = null;
+    let sessionEndTime = 0;
 
     // ---- DOM Helpers ----
     const $ = (sel) => document.querySelector(sel);
@@ -173,8 +179,32 @@
 
     function initDeleteModal() {
         deleteModal = new bootstrap.Modal($('#confirmModal'));
+        const deletePinInput = $('#deletePinInput');
+        const deletePinError = $('#deletePinError');
+
+        // Reset PIN field when modal opens
+        $('#confirmModal').addEventListener('show.bs.modal', () => {
+            deletePinInput.value = '';
+            deletePinError.style.display = 'none';
+        });
+        $('#confirmModal').addEventListener('shown.bs.modal', () => {
+            deletePinInput.focus();
+        });
+
+        // Allow Enter key in PIN field
+        deletePinInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); $('#confirmDelete').click(); }
+        });
 
         $('#confirmDelete').addEventListener('click', () => {
+            // Verify PIN before deleting
+            if (deletePinInput.value !== getAdminPin()) {
+                deletePinError.style.display = 'block';
+                deletePinInput.value = '';
+                deletePinInput.focus();
+                return;
+            }
+
             if (pendingDeleteType === 'sale') {
                 sales = sales.filter(s => s.id !== pendingDeleteId);
                 saveData(STORAGE_KEYS.sales, sales);
@@ -746,6 +776,76 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         return localStorage.getItem(STORAGE_KEYS.adminPin) || DEFAULT_PIN;
     }
 
+    function getTimeoutMinutes() {
+        const val = localStorage.getItem(STORAGE_KEYS.timeout);
+        return val !== null ? parseInt(val) : 15;
+    }
+
+    function isLockedOut() {
+        const saved = localStorage.getItem(STORAGE_KEYS.lockout);
+        if (saved) {
+            const data = JSON.parse(saved);
+            failedAttempts = data.attempts || 0;
+            lockoutUntil = data.until || 0;
+        }
+        return Date.now() < lockoutUntil;
+    }
+
+    function recordFailedAttempt() {
+        failedAttempts++;
+        if (failedAttempts >= MAX_PIN_ATTEMPTS) {
+            lockoutUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+        }
+        localStorage.setItem(STORAGE_KEYS.lockout, JSON.stringify({ attempts: failedAttempts, until: lockoutUntil }));
+    }
+
+    function clearLockout() {
+        failedAttempts = 0;
+        lockoutUntil = 0;
+        localStorage.removeItem(STORAGE_KEYS.lockout);
+    }
+
+    // ---- Session Timeout ----
+    function resetSessionTimer() {
+        const minutes = getTimeoutMinutes();
+        if (!minutes || !currentRole) return;
+        sessionEndTime = Date.now() + minutes * 60 * 1000;
+    }
+
+    function startSessionMonitor() {
+        resetSessionTimer();
+        if (sessionTimer) clearInterval(sessionTimer);
+        sessionTimer = setInterval(() => {
+            const minutes = getTimeoutMinutes();
+            const countdown = $('#sessionCountdown');
+            if (!minutes || !currentRole) {
+                if (countdown) countdown.textContent = 'Off';
+                return;
+            }
+            const remaining = Math.max(0, sessionEndTime - Date.now());
+            if (countdown) {
+                const m = Math.floor(remaining / 60000);
+                const s = Math.floor((remaining % 60000) / 1000);
+                countdown.textContent = m + ':' + String(s).padStart(2, '0');
+            }
+            if (remaining <= 0) {
+                clearInterval(sessionTimer);
+                sessionTimer = null;
+                showToast('Session expired. Logging out...', true);
+                setTimeout(() => $('#logoutBtn').click(), 1200);
+            }
+        }, 1000);
+
+        // Reset timer on user activity
+        ['click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+            document.addEventListener(evt, resetSessionTimer, { passive: true });
+        });
+    }
+
+    function stopSessionMonitor() {
+        if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
+    }
+
     function initLanding() {
         const landing = $('#landingPage');
         const mainApp = $('#mainApp');
@@ -756,6 +856,30 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         const pinSubmit = $('#pinSubmit');
         const pinCancel = $('#pinCancel');
         const pinError = $('#pinError');
+        const pinLockout = $('#pinLockout');
+        const lockoutTimerEl = $('#lockoutTimer');
+        let lockoutInterval = null;
+
+        function showLockoutTimer() {
+            pinError.style.display = 'none';
+            pinLockout.style.display = 'block';
+            pinSubmit.disabled = true;
+            adminPinInput.disabled = true;
+            if (lockoutInterval) clearInterval(lockoutInterval);
+            lockoutInterval = setInterval(() => {
+                const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+                lockoutTimerEl.textContent = remaining;
+                if (remaining <= 0) {
+                    clearInterval(lockoutInterval);
+                    lockoutInterval = null;
+                    clearLockout();
+                    pinLockout.style.display = 'none';
+                    pinSubmit.disabled = false;
+                    adminPinInput.disabled = false;
+                    adminPinInput.focus();
+                }
+            }, 500);
+        }
 
         function enterApp(role) {
             currentRole = role;
@@ -763,6 +887,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             mainApp.classList.remove('d-none');
             applyRole();
             refreshAll();
+            if (role === 'admin') startSessionMonitor();
         }
 
         loginAdmin.addEventListener('click', () => {
@@ -771,16 +896,30 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             loginUser.style.display = 'none';
             adminPinInput.value = '';
             pinError.style.display = 'none';
-            adminPinInput.focus();
+            pinLockout.style.display = 'none';
+            // Check existing lockout
+            if (isLockedOut()) {
+                showLockoutTimer();
+            } else {
+                adminPinInput.focus();
+            }
         });
 
         loginUser.addEventListener('click', () => enterApp('user'));
 
         pinSubmit.addEventListener('click', () => {
+            if (isLockedOut()) { showLockoutTimer(); return; }
             if (adminPinInput.value === getAdminPin()) {
+                clearLockout();
                 enterApp('admin');
             } else {
-                pinError.style.display = 'block';
+                recordFailedAttempt();
+                if (isLockedOut()) {
+                    showLockoutTimer();
+                } else {
+                    pinError.style.display = 'block';
+                    pinError.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Incorrect PIN (' + (MAX_PIN_ATTEMPTS - failedAttempts) + ' attempts left)';
+                }
                 adminPinInput.value = '';
                 adminPinInput.focus();
             }
@@ -799,6 +938,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
         $('#logoutBtn').addEventListener('click', () => {
             currentRole = null;
+            stopSessionMonitor();
             mainApp.classList.add('d-none');
             landing.classList.remove('d-none');
             adminPinBox.style.display = 'none';
@@ -846,6 +986,49 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     }
 
     // ---- Init ----
+    function initChangePinForm() {
+        const form = $('#changePinForm');
+        if (!form) return;
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const current = $('#currentPin').value;
+            const newPin = $('#newPin').value;
+            const confirm = $('#confirmNewPin').value;
+
+            if (current !== getAdminPin()) {
+                showToast('Current PIN is incorrect', true); return;
+            }
+            if (newPin.length < 4) {
+                showToast('New PIN must be at least 4 digits', true); return;
+            }
+            if (!/^\d+$/.test(newPin)) {
+                showToast('PIN must contain only numbers', true); return;
+            }
+            if (newPin !== confirm) {
+                showToast('New PINs do not match', true); return;
+            }
+            if (newPin === current) {
+                showToast('New PIN must be different from current', true); return;
+            }
+
+            localStorage.setItem(STORAGE_KEYS.adminPin, newPin);
+            form.reset();
+            showToast('Admin PIN updated successfully!');
+        });
+    }
+
+    function initTimeoutSettings() {
+        const sel = $('#timeoutSelect');
+        const btn = $('#btnSaveTimeout');
+        if (!sel || !btn) return;
+        sel.value = String(getTimeoutMinutes());
+        btn.addEventListener('click', () => {
+            localStorage.setItem(STORAGE_KEYS.timeout, sel.value);
+            resetSessionTimer();
+            showToast('Timeout set to ' + (sel.value === '0' ? 'Never' : sel.value + ' minutes'));
+        });
+    }
+
     function init() {
         bsToast = new bootstrap.Toast($('#toast'), { delay: 2500 });
         initLanding();
@@ -856,6 +1039,8 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         initDebtForm();
         initMemberForm();
         initReport();
+        initChangePinForm();
+        initTimeoutSettings();
         refreshAll();
     }
 

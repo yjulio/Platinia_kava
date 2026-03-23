@@ -25,6 +25,10 @@ body {
     background-color: var(--surface-raised) !important;
 }
 
+.bg-surface-raised {
+    background-color: var(--surface-hover) !important;
+}
+
 .border-gold-subtle {
     border-color: rgba(212, 160, 23, 0.25) !important;
 }
