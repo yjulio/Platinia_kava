@@ -228,9 +228,10 @@ body {
 .tab-nav .nav-link {
     color: #888;
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     border-radius: 8px 8px 0 0;
-    padding: 10px 16px;
+    padding: 8px 10px;
+    white-space: nowrap;
     white-space: nowrap;
     transition: color 0.2s, background 0.2s;
     border: none;
@@ -535,11 +536,11 @@ body {
 
 /* ===== Mobile-Friendly Tab Navigation ===== */
 .tab-nav {
-    -webkit-overflow-scrolling: touch;
     position: relative;
 }
 
 .tab-nav::after {
+    display: none;
     content: '';
     position: absolute;
     right: 0;
@@ -678,9 +679,8 @@ body {
     }
 
     .tab-nav .nav-link {
-        font-size: 0.75rem;
-        padding: 8px 10px;
-        min-width: max-content;
+        font-size: 0.7rem;
+        padding: 6px 8px;
     }
 
     .tab-content.card .tab-pane {
