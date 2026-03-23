@@ -164,6 +164,12 @@
                         <i class="bi bi-person-exclamation me-1 d-none d-md-inline"></i>Debts
                     </button>
                 </li>
+                <li class="nav-item" role="presentation" data-role="admin">
+                    <button class="nav-link" id="tab-btn-members" data-bs-toggle="pill" data-bs-target="#tab-members"
+                        type="button" role="tab">
+                        <i class="bi bi-people me-1 d-none d-md-inline"></i>Members
+                    </button>
+                </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="tab-btn-report" data-bs-toggle="pill" data-bs-target="#tab-report"
                         type="button" role="tab">
@@ -372,8 +378,10 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label for="debtMember" class="form-label">Member Name</label>
-                                    <input type="text" id="debtMember" class="form-control" required
-                                        placeholder="e.g. John">
+                                    <select id="debtMember" class="form-select" required>
+                                        <option value="">-- Select Member --</option>
+                                    </select>
+                                    <input type="text" id="debtMemberOther" class="form-control mt-2 d-none" placeholder="Type member name...">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="debtAmount" class="form-label">Amount Owed (VT)</label>
@@ -438,6 +446,77 @@
                         </table>
                     </div>
                     <p class="text-muted text-center py-4 fst-italic mb-0" id="noDebtsMsg">No debts recorded yet.</p>
+                </div>
+
+                <!-- Members Management -->
+                <div class="tab-pane fade p-4" id="tab-members" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-people me-2"></i>Members Management</h5>
+
+                    <!-- Add Member Form -->
+                    <div class="mb-4">
+                        <h6 class="text-muted fw-semibold mb-3"><i class="bi bi-person-plus me-1"></i>Add New Member</h6>
+                        <form id="memberForm">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="memberName" class="form-label">Full Name</label>
+                                    <input type="text" id="memberName" class="form-control" required placeholder="e.g. John Naupa">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="memberPhone" class="form-label">Phone <span class="text-muted">(optional)</span></label>
+                                    <input type="tel" id="memberPhone" class="form-control" placeholder="e.g. 7712345">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="memberRole" class="form-label">Role / Position</label>
+                                    <select id="memberRole" class="form-select">
+                                        <option value="Member">Member</option>
+                                        <option value="Chairman">Chairman</option>
+                                        <option value="Treasurer">Treasurer</option>
+                                        <option value="Secretary">Secretary</option>
+                                        <option value="Committee">Committee</option>
+                                        <option value="Staff">Staff</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="memberJoined" class="form-label">Date Joined</label>
+                                    <input type="date" id="memberJoined" class="form-control" required>
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="memberNotes" class="form-label">Notes <span class="text-muted">(optional)</span></label>
+                                    <input type="text" id="memberNotes" class="form-control" placeholder="Any notes about this member...">
+                                </div>
+                            </div>
+                            <div class="mt-3 text-end">
+                                <button type="submit" class="btn btn-gold px-4" id="memberSubmitBtn">
+                                    <i class="bi bi-check-lg me-1"></i>Add Member
+                                </button>
+                            </div>
+                        </form>
+                        <hr class="border-secondary my-4">
+                    </div>
+
+                    <!-- Members Summary -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="text-muted small fw-semibold"><i class="bi bi-people me-1"></i>Total Members: <strong class="text-gold" id="memberCount">0</strong></span>
+                        <input type="text" id="memberSearch" class="form-control form-control-sm w-auto" placeholder="Search members..." style="max-width: 200px;">
+                    </div>
+
+                    <!-- Members Table -->
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-striped align-middle mb-0" id="membersTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                    <th>Notes</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted text-center py-4 fst-italic mb-0" id="noMembersMsg">No members added yet.</p>
                 </div>
 
                 <!-- Report -->

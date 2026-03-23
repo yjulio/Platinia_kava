@@ -4,7 +4,7 @@
     'use strict';
 
     // ---- Data Layer ----
-    const STORAGE_KEYS = { sales: 'kava_sales', expenses: 'kava_expenses', debts: 'kava_debts', adminPin: 'kava_admin_pin' };
+    const STORAGE_KEYS = { sales: 'kava_sales', expenses: 'kava_expenses', debts: 'kava_debts', members: 'kava_members', adminPin: 'kava_admin_pin' };
     const DEFAULT_PIN = '1234';
 
     function loadData(key) {
@@ -17,6 +17,7 @@
     let sales = loadData(STORAGE_KEYS.sales);
     let expenses = loadData(STORAGE_KEYS.expenses);
     let debts = loadData(STORAGE_KEYS.debts);
+    let members = loadData(STORAGE_KEYS.members);
     let activeFilter = null;
     let currentRole = null;
 
@@ -186,6 +187,10 @@
                 debts = debts.filter(d => d.id !== pendingDeleteId);
                 saveData(STORAGE_KEYS.debts, debts);
                 showToast('Debt deleted');
+            } else if (pendingDeleteType === 'member') {
+                members = members.filter(m => m.id !== pendingDeleteId);
+                saveData(STORAGE_KEYS.members, members);
+                showToast('Member removed');
             }
             deleteModal.hide();
             pendingDeleteType = null;
@@ -434,14 +439,29 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     function initDebtForm() {
         const debtDate = $('#debtDate');
         const debtForm = $('#debtForm');
+        const debtMemberSel = $('#debtMember');
+        const debtMemberOther = $('#debtMemberOther');
         debtDate.value = todayISO();
+
+        // Toggle "Other" text input when selected
+        debtMemberSel.addEventListener('change', () => {
+            if (debtMemberSel.value === '__other__') {
+                debtMemberOther.classList.remove('d-none');
+                debtMemberOther.required = true;
+                debtMemberOther.focus();
+            } else {
+                debtMemberOther.classList.add('d-none');
+                debtMemberOther.required = false;
+                debtMemberOther.value = '';
+            }
+        });
 
         debtForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const member = $('#debtMember').value.trim();
+            let member = debtMemberSel.value === '__other__' ? debtMemberOther.value.trim() : debtMemberSel.value;
             const amount = parseFloat($('#debtAmount').value);
             const notes = $('#debtNotes').value.trim();
-            if (!member) { showToast('Enter member name', true); return; }
+            if (!member) { showToast('Select or enter a member name', true); return; }
             if (!amount || amount <= 0) { showToast('Enter a valid amount', true); return; }
 
             debts.push({
@@ -456,9 +476,32 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             saveData(STORAGE_KEYS.debts, debts);
             debtForm.reset();
             debtDate.value = todayISO();
+            debtMemberOther.classList.add('d-none');
+            debtMemberOther.required = false;
+            populateDebtMemberDropdown();
             showToast('Debt recorded for ' + member);
             refreshAll();
         });
+    }
+
+    // ---- Populate Debt Member Dropdown ----
+    function populateDebtMemberDropdown() {
+        const sel = $('#debtMember');
+        if (!sel) return;
+        const currentVal = sel.value;
+        sel.innerHTML = '<option value="">-- Select Member --</option>';
+        const sorted = [...members].sort((a, b) => a.name.localeCompare(b.name));
+        sorted.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.name;
+            opt.textContent = m.name + (m.role && m.role !== 'Member' ? ' (' + m.role + ')' : '');
+            sel.appendChild(opt);
+        });
+        const otherOpt = document.createElement('option');
+        otherOpt.value = '__other__';
+        otherOpt.textContent = '+ Other (type name)';
+        sel.appendChild(otherOpt);
+        if (currentVal) sel.value = currentVal;
     }
 
     // ---- Render Debts ----
@@ -518,6 +561,113 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         });
     }
 
+    // ---- Member Form ----
+    let editingMemberId = null;
+
+    function initMemberForm() {
+        const memberForm = $('#memberForm');
+        const memberJoined = $('#memberJoined');
+        memberJoined.value = todayISO();
+
+        memberForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = $('#memberName').value.trim();
+            const phone = $('#memberPhone').value.trim();
+            const role = $('#memberRole').value;
+            const notes = $('#memberNotes').value.trim();
+            if (!name) { showToast('Enter member name', true); return; }
+
+            if (editingMemberId) {
+                const member = members.find(m => m.id === editingMemberId);
+                if (member) {
+                    member.name = name;
+                    member.phone = phone;
+                    member.role = role;
+                    member.joined = memberJoined.value;
+                    member.notes = notes;
+                }
+                editingMemberId = null;
+                $('#memberSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-1"></i>Add Member';
+                showToast('Member updated');
+            } else {
+                members.push({
+                    id: generateId(),
+                    name,
+                    phone,
+                    role,
+                    joined: memberJoined.value,
+                    notes,
+                });
+                showToast('Member added: ' + name);
+            }
+            saveData(STORAGE_KEYS.members, members);
+            memberForm.reset();
+            memberJoined.value = todayISO();
+            refreshAll();
+        });
+
+        // Search
+        $('#memberSearch').addEventListener('input', () => renderMembersTable());
+    }
+
+    function editMember(id) {
+        const m = members.find(x => x.id === id);
+        if (!m) return;
+        editingMemberId = id;
+        $('#memberName').value = m.name;
+        $('#memberPhone').value = m.phone || '';
+        $('#memberRole').value = m.role || 'Member';
+        $('#memberJoined').value = m.joined || '';
+        $('#memberNotes').value = m.notes || '';
+        $('#memberSubmitBtn').innerHTML = '<i class="bi bi-pencil me-1"></i>Update Member';
+        // Scroll to form
+        $('#tab-members').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ---- Render Members Table ----
+    function renderMembersTable() {
+        const searchVal = ($('#memberSearch')?.value || '').toLowerCase();
+        const filtered = members
+            .filter(m => !searchVal || m.name.toLowerCase().includes(searchVal) || (m.role || '').toLowerCase().includes(searchVal) || (m.phone || '').includes(searchVal))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        const tbody = $('#membersTableBody');
+        const noMsg = $('#noMembersMsg');
+        if (!tbody) return;
+        noMsg.style.display = filtered.length ? 'none' : 'block';
+        tbody.innerHTML = '';
+        $('#memberCount').textContent = members.length;
+
+        const roleBadgeColors = {
+            'Chairman': 'bg-gold text-dark',
+            'Treasurer': 'bg-info text-dark',
+            'Secretary': 'bg-primary',
+            'Committee': 'bg-warning text-dark',
+            'Staff': 'bg-secondary',
+            'Member': 'bg-secondary bg-opacity-50',
+        };
+
+        filtered.forEach(m => {
+            const tr = document.createElement('tr');
+            const badgeClass = roleBadgeColors[m.role] || 'bg-secondary bg-opacity-50';
+
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(m.name)}</strong></td>
+                <td class="text-muted">${escapeHtml(m.phone || '—')}</td>
+                <td><span class="badge ${badgeClass}">${escapeHtml(m.role || 'Member')}</span></td>
+                <td class="text-muted">${escapeHtml(m.joined || '—')}</td>
+                <td class="text-muted">${escapeHtml(m.notes || '—')}</td>
+                <td class="text-center text-nowrap">
+                    <button class="btn btn-sm btn-outline-gold btn-edit-member me-1" title="Edit"><i class="bi bi-pencil"></i></button>
+                    <button class="btn-icon-delete" title="Delete"><i class="bi bi-trash"></i></button>
+                </td>
+            `;
+            tr.querySelector('.btn-edit-member').addEventListener('click', () => editMember(m.id));
+            tr.querySelector('.btn-icon-delete').addEventListener('click', () => requestDelete('member', m.id));
+            tbody.appendChild(tr);
+        });
+    }
+
     // ---- Refresh Everything ----
     function refreshAll() {
         updateDashboard();
@@ -525,6 +675,8 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         renderExpensesTable();
         renderDailySummary();
         renderDebtsTable();
+        renderMembersTable();
+        populateDebtMemberDropdown();
         if (currentRole) {
             const isAdmin = currentRole === 'admin';
             $$('.btn-icon-delete').forEach(btn => {
@@ -646,6 +798,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         initExpenseForm();
         initFilter();
         initDebtForm();
+        initMemberForm();
         initReport();
         refreshAll();
     }
