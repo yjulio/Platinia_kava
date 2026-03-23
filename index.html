@@ -523,6 +523,7 @@
                                     <th>Joined</th>
                                     <th>Fee</th>
                                     <th>Fee Status</th>
+                                    <th>Consumption</th>
                                 </tr>
                             </thead>
                             <tbody id="viewMembersTableBody"></tbody>
@@ -604,6 +605,11 @@
                                     <input type="number" id="memberFeePaidAmount" class="form-control" min="0" step="1"
                                         placeholder="e.g. 2500">
                                 </div>
+                                <div class="col-md-4">
+                                    <label for="memberConsumption" class="form-label">Total Consumption (VT)</label>
+                                    <input type="number" id="memberConsumption" class="form-control" min="0" step="1"
+                                        placeholder="e.g. 3000">
+                                </div>
                                 <div class="col-md-8">
                                     <label for="memberNotes" class="form-label">Notes <span
                                             class="text-muted">(optional)</span></label>
@@ -659,6 +665,7 @@
                                     <th>Joined</th>
                                     <th>Fee</th>
                                     <th>Fee Status</th>
+                                    <th>Consumption</th>
                                     <th>Notes</th>
                                     <th class="text-center">Actions</th>
                                 </tr>

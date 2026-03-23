@@ -639,7 +639,8 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             if (!memberId) { showToast('Enter a member ID', true); return; }
             if (!name) { showToast('Enter member name', true); return; }
 
-            const body = { memberId, name, phone, role, joined: memberJoined.value, fee, feeStatus, feePaidAmount, notes };
+            const consumption = parseFloat($('#memberConsumption').value) || 0;
+            const body = { memberId, name, phone, role, joined: memberJoined.value, fee, feeStatus, feePaidAmount, consumption, notes };
 
             if (editingMemberId) {
                 const result = await api('/members/' + editingMemberId, { method: 'PUT', body });
@@ -686,6 +687,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                     'joined': 'joined', 'date joined': 'joined', 'datejoined': 'joined',
                     'fee': 'fee', 'membership fee': 'fee',
                     'fee status': 'feeStatus', 'feestatus': 'feeStatus', 'status': 'feeStatus',
+                    'consumption': 'consumption', 'total consumption': 'consumption',
                     'notes': 'notes', 'note': 'notes',
                 };
                 header.forEach((h, i) => {
@@ -714,6 +716,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                         fee: parseFloat(get('fee')) || 0,
                         feeStatus: get('feeStatus') || 'Unpaid',
                         feePaidAmount: 0,
+                        consumption: parseFloat(get('consumption')) || 0,
                         notes: get('notes'),
                     });
                 }
@@ -728,7 +731,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         // ---- Export CSV ----
         $('#btnExportMembers').addEventListener('click', () => {
             if (!members.length) { showToast('No members to export', true); return; }
-            const headers = ['Member ID', 'Name', 'Phone', 'Role', 'Joined', 'Fee', 'Fee Status', 'Notes'];
+            const headers = ['Member ID', 'Name', 'Phone', 'Role', 'Joined', 'Fee', 'Fee Status', 'Consumption', 'Notes'];
             const rows = members.map(m => [
                 csvEscape(m.memberId || ''),
                 csvEscape(m.name),
@@ -737,6 +740,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                 csvEscape(m.joined || ''),
                 m.fee || 0,
                 csvEscape(m.feeStatus || 'Unpaid'),
+                m.consumption || 0,
                 csvEscape(m.notes || ''),
             ].join(','));
             const csv = [headers.join(','), ...rows].join('\n');
@@ -764,6 +768,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         $('#memberFeeStatus').value = m.feeStatus || 'Unpaid';
         $('#memberFeePaidAmountWrap').style.display = (m.feeStatus === 'Partial') ? '' : 'none';
         $('#memberFeePaidAmount').value = m.feePaidAmount || '';
+        $('#memberConsumption').value = m.consumption || '';
         $('#memberNotes').value = m.notes || '';
         $('#memberSubmitBtn').innerHTML = '<i class="bi bi-pencil me-1"></i>Update Member';
         // Scroll to form
@@ -822,6 +827,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                 <td class="text-muted">${escapeHtml(m.joined || '—')}</td>
                 <td class="fw-bold">${m.fee ? formatCurrency(m.fee) : '—'}</td>
                 <td>${feeStatusBadge[m.feeStatus] || feeStatusBadge['Unpaid']}</td>
+                <td class="fw-bold text-info">${m.consumption ? formatCurrency(m.consumption) : '—'}</td>
                 <td class="text-muted">${escapeHtml(m.notes || '—')}</td>
                 <td class="text-center text-nowrap">
                     <button class="btn btn-sm btn-outline-gold btn-edit-member me-1" title="Edit"><i class="bi bi-pencil"></i></button>
@@ -887,6 +893,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                 <td class="text-muted">${escapeHtml(m.joined || '—')}</td>
                 <td class="fw-bold">${m.fee ? formatCurrency(m.fee) : '—'}</td>
                 <td>${feeBadge}</td>
+                <td class="fw-bold text-info">${m.consumption ? formatCurrency(m.consumption) : '—'}</td>
             `;
             tbody.appendChild(tr);
         });

@@ -53,6 +53,7 @@ db.exec(`
     fee REAL DEFAULT 0,
     feeStatus TEXT DEFAULT 'Unpaid',
     feePaidAmount REAL DEFAULT 0,
+    consumption REAL DEFAULT 0,
     notes TEXT DEFAULT ''
   );
 
@@ -61,6 +62,13 @@ db.exec(`
     value TEXT NOT NULL
   );
 `);
+
+// Migrate: add consumption column if missing
+try {
+    db.prepare('SELECT consumption FROM members LIMIT 1').get();
+} catch (_) {
+    db.exec('ALTER TABLE members ADD COLUMN consumption REAL DEFAULT 0');
+}
 
 // Seed default settings
 const getSettingStmt = db.prepare('SELECT value FROM settings WHERE key = ?');
@@ -163,7 +171,7 @@ app.get('/api/members', (_req, res) => {
 });
 
 app.post('/api/members', (req, res) => {
-    const { memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, notes } = req.body;
+    const { memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, consumption, notes } = req.body;
     if (!memberId || !name || !joined) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -172,14 +180,14 @@ app.post('/api/members', (req, res) => {
         return res.status(409).json({ error: 'Member ID already exists' });
     }
     const id = generateId();
-    db.prepare(`INSERT INTO members (id, memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(id, memberId, name, phone || '', role || 'Member', joined, +fee || 0, feeStatus || 'Unpaid', +feePaidAmount || 0, notes || '');
+    db.prepare(`INSERT INTO members (id, memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, consumption, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(id, memberId, name, phone || '', role || 'Member', joined, +fee || 0, feeStatus || 'Unpaid', +feePaidAmount || 0, +consumption || 0, notes || '');
     res.status(201).json({ id });
 });
 
 app.put('/api/members/:id', (req, res) => {
-    const { memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, notes } = req.body;
+    const { memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, consumption, notes } = req.body;
     if (!memberId || !name) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -188,8 +196,8 @@ app.put('/api/members/:id', (req, res) => {
     if (dup) {
         return res.status(409).json({ error: 'Member ID already exists' });
     }
-    db.prepare(`UPDATE members SET memberId=?, name=?, phone=?, role=?, joined=?, fee=?, feeStatus=?, feePaidAmount=?, notes=? WHERE id=?`)
-        .run(memberId, name, phone || '', role || 'Member', joined, +fee || 0, feeStatus || 'Unpaid', +feePaidAmount || 0, notes || '', req.params.id);
+    db.prepare(`UPDATE members SET memberId=?, name=?, phone=?, role=?, joined=?, fee=?, feeStatus=?, feePaidAmount=?, consumption=?, notes=? WHERE id=?`)
+        .run(memberId, name, phone || '', role || 'Member', joined, +fee || 0, feeStatus || 'Unpaid', +feePaidAmount || 0, +consumption || 0, notes || '', req.params.id);
     res.json({ ok: true });
 });
 
@@ -204,15 +212,15 @@ app.post('/api/members/bulk', (req, res) => {
     if (!Array.isArray(list)) {
         return res.status(400).json({ error: 'Expected array of members' });
     }
-    const insert = db.prepare(`INSERT OR IGNORE INTO members (id, memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    const insert = db.prepare(`INSERT OR IGNORE INTO members (id, memberId, name, phone, role, joined, fee, feeStatus, feePaidAmount, consumption, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     const tx = db.transaction((items) => {
         let added = 0;
         for (const m of items) {
             const result = insert.run(
                 generateId(), m.memberId, m.name, m.phone || '', m.role || 'Member',
                 m.joined || new Date().toISOString().split('T')[0],
-                +m.fee || 0, m.feeStatus || 'Unpaid', +m.feePaidAmount || 0, m.notes || ''
+                +m.fee || 0, m.feeStatus || 'Unpaid', +m.feePaidAmount || 0, +m.consumption || 0, m.notes || ''
             );
             if (result.changes > 0) added++;
         }
