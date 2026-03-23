@@ -522,6 +522,20 @@
                 <div class="tab-pane fade p-4" id="tab-members" role="tabpanel">
                     <h5 class="text-gold fw-bold mb-3"><i class="bi bi-people me-2"></i>Members Management</h5>
 
+                    <!-- Import / Export Bar -->
+                    <div class="d-flex gap-2 flex-wrap mb-4">
+                        <button id="btnImportMembers" class="btn btn-outline-gold btn-sm">
+                            <i class="bi bi-upload me-1"></i>Import CSV
+                        </button>
+                        <button id="btnExportMembers" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-download me-1"></i>Export CSV
+                        </button>
+                        <input type="file" id="importMembersFile" accept=".csv" class="d-none">
+                        <span class="text-muted small align-self-center ms-2 d-none d-md-inline">
+                            CSV columns: Member ID, Name, Phone, Role, Joined, Fee, Fee Status, Notes
+                        </span>
+                    </div>
+
                     <!-- Add Member Form -->
                     <div class="mb-4">
                         <h6 class="text-muted fw-semibold mb-3"><i class="bi bi-person-plus me-1"></i>Add New Member

@@ -45,6 +45,33 @@
     }
     function todayISO() { return new Date().toISOString().split('T')[0]; }
 
+    // CSV helpers
+    function csvEscape(val) {
+        const str = String(val);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+    }
+    function parseCSVLine(line) {
+        const result = [];
+        let current = '', inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuotes) {
+                if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
+                else if (ch === '"') { inQuotes = false; }
+                else { current += ch; }
+            } else {
+                if (ch === '"') { inQuotes = true; }
+                else if (ch === ',') { result.push(current); current = ''; }
+                else { current += ch; }
+            }
+        }
+        result.push(current);
+        return result;
+    }
+
     function showToast(message, isError) {
         const toastEl = $('#toast');
         const bodyEl = $('#toastBody');
@@ -669,6 +696,97 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
         // Search
         $('#memberSearch').addEventListener('input', () => renderMembersTable());
+
+        // ---- Import CSV ----
+        const importBtn = $('#btnImportMembers');
+        const importFile = $('#importMembersFile');
+        importBtn.addEventListener('click', () => importFile.click());
+        importFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const text = evt.target.result;
+                const lines = text.split(/\r?\n/).filter(l => l.trim());
+                if (lines.length < 2) { showToast('CSV file is empty or has no data rows', true); return; }
+
+                // Parse header to detect column order
+                const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z ]/g, ''));
+                const colMap = {};
+                const aliases = {
+                    'member id': 'memberId', 'memberid': 'memberId', 'id': 'memberId',
+                    'name': 'name', 'full name': 'name', 'fullname': 'name',
+                    'phone': 'phone', 'telephone': 'phone', 'tel': 'phone',
+                    'role': 'role', 'position': 'role',
+                    'joined': 'joined', 'date joined': 'joined', 'datejoined': 'joined',
+                    'fee': 'fee', 'membership fee': 'fee',
+                    'fee status': 'feeStatus', 'feestatus': 'feeStatus', 'status': 'feeStatus',
+                    'notes': 'notes', 'note': 'notes',
+                };
+                header.forEach((h, i) => {
+                    if (aliases[h]) colMap[aliases[h]] = i;
+                });
+
+                if (colMap.name === undefined) {
+                    showToast('CSV must have a "Name" column', true);
+                    importFile.value = '';
+                    return;
+                }
+
+                let imported = 0, skipped = 0;
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = parseCSVLine(lines[i]);
+                    const get = (key) => cols[colMap[key]]?.trim() || '';
+                    const name = get('name');
+                    if (!name) { skipped++; continue; }
+                    const memberId = get('memberId');
+                    if (memberId && members.some(m => m.memberId === memberId)) { skipped++; continue; }
+                    members.push({
+                        id: generateId(),
+                        memberId: memberId || '',
+                        name,
+                        phone: get('phone'),
+                        role: get('role') || 'Member',
+                        joined: get('joined') || todayISO(),
+                        fee: parseFloat(get('fee')) || 0,
+                        feeStatus: get('feeStatus') || 'Unpaid',
+                        feePaidAmount: 0,
+                        notes: get('notes'),
+                    });
+                    imported++;
+                }
+                saveData(STORAGE_KEYS.members, members);
+                refreshAll();
+                showToast(imported + ' members imported' + (skipped ? ' (' + skipped + ' skipped/duplicate)' : ''));
+                importFile.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        // ---- Export CSV ----
+        $('#btnExportMembers').addEventListener('click', () => {
+            if (!members.length) { showToast('No members to export', true); return; }
+            const headers = ['Member ID', 'Name', 'Phone', 'Role', 'Joined', 'Fee', 'Fee Status', 'Notes'];
+            const rows = members.map(m => [
+                csvEscape(m.memberId || ''),
+                csvEscape(m.name),
+                csvEscape(m.phone || ''),
+                csvEscape(m.role || 'Member'),
+                csvEscape(m.joined || ''),
+                m.fee || 0,
+                csvEscape(m.feeStatus || 'Unpaid'),
+                csvEscape(m.notes || ''),
+            ].join(','));
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'members_' + todayISO() + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Members exported!');
+        });
     }
 
     function editMember(id) {
