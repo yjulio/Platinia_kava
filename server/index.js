@@ -56,6 +56,16 @@ db.exec(`
     notes TEXT DEFAULT ''
   );
 
+  CREATE TABLE IF NOT EXISTS consumption (
+    id TEXT PRIMARY KEY,
+    date TEXT NOT NULL,
+    memberId TEXT NOT NULL,
+    memberName TEXT NOT NULL,
+    shells INTEGER NOT NULL DEFAULT 0,
+    amount REAL NOT NULL DEFAULT 0,
+    notes TEXT DEFAULT ''
+  );
+
   CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -220,6 +230,31 @@ app.post('/api/members/bulk', (req, res) => {
     });
     const added = tx(list);
     res.json({ added, total: list.length });
+});
+
+// ---- Consumption ----
+app.get('/api/consumption', (_req, res) => {
+    const rows = db.prepare('SELECT * FROM consumption ORDER BY date DESC').all();
+    res.json(rows);
+});
+
+app.post('/api/consumption', (req, res) => {
+    const { date, memberId, memberName, shells, amount, notes } = req.body;
+    if (!date || !memberId || !memberName) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if ((!shells || shells <= 0) && (!amount || amount <= 0)) {
+        return res.status(400).json({ error: 'Enter shells or amount' });
+    }
+    const id = generateId();
+    db.prepare('INSERT INTO consumption (id, date, memberId, memberName, shells, amount, notes) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(id, date, memberId, memberName, +shells || 0, +amount || 0, notes || '');
+    res.status(201).json({ id });
+});
+
+app.delete('/api/consumption/:id', (req, res) => {
+    db.prepare('DELETE FROM consumption WHERE id = ?').run(req.params.id);
+    res.json({ ok: true });
 });
 
 // ---- Settings ----

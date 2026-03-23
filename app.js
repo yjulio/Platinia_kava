@@ -19,16 +19,17 @@
     }
 
     async function loadAllData() {
-        const [s, e, d, m] = await Promise.all([
-            api('/sales'), api('/expenses'), api('/debts'), api('/members')
+        const [s, e, d, m, c] = await Promise.all([
+            api('/sales'), api('/expenses'), api('/debts'), api('/members'), api('/consumption')
         ]);
-        sales = s; expenses = e; debts = d; members = m;
+        sales = s; expenses = e; debts = d; members = m; consumption = c;
     }
 
     let sales = [];
     let expenses = [];
     let debts = [];
     let members = [];
+    let consumption = [];
     let activeFilter = null;
     let currentRole = null;
     let failedAttempts = 0;
@@ -97,6 +98,10 @@
     function filteredExpenses() {
         if (!activeFilter) return expenses;
         return expenses.filter(e => e.date.startsWith(activeFilter));
+    }
+    function filteredConsumption() {
+        if (!activeFilter) return consumption;
+        return consumption.filter(c => c.date.startsWith(activeFilter));
     }
 
     // ---- Dashboard ----
@@ -247,6 +252,9 @@
             } else if (pendingDeleteType === 'debt') {
                 await api('/debts/' + pendingDeleteId, { method: 'DELETE' });
                 showToast('Debt deleted');
+            } else if (pendingDeleteType === 'consumption') {
+                await api('/consumption/' + pendingDeleteId, { method: 'DELETE' });
+                showToast('Consumption record deleted');
             } else if (pendingDeleteType === 'member') {
                 await api('/members/' + pendingDeleteId, { method: 'DELETE' });
                 showToast('Member removed');
@@ -834,6 +842,109 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         });
     }
 
+    // ---- Consumption Form ----
+    function initConsumptionForm() {
+        const form = $('#consumptionForm');
+        const dateField = $('#consumptionDate');
+        const memberSel = $('#consumptionMember');
+        dateField.value = todayISO();
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const selectedMember = memberSel.value;
+            if (!selectedMember) { showToast('Select a member', true); return; }
+            const [memberId, ...rest] = selectedMember.split('|');
+            const memberName = rest.join('|');
+            const shells = parseInt($('#consumptionShells').value) || 0;
+            const amount = parseFloat($('#consumptionAmount').value) || 0;
+            if (shells <= 0 && amount <= 0) { showToast('Enter shells or amount', true); return; }
+
+            await api('/consumption', {
+                method: 'POST', body: {
+                    date: dateField.value, memberId, memberName, shells, amount,
+                    notes: $('#consumptionNotes').value.trim()
+                }
+            });
+            form.reset();
+            dateField.value = todayISO();
+            showToast('Consumption recorded for ' + memberName);
+            await refreshAll();
+        });
+
+        // Filter dropdown
+        $('#consumptionFilterMember').addEventListener('change', () => renderConsumptionTable());
+    }
+
+    function populateConsumptionMemberDropdown() {
+        const sel = $('#consumptionMember');
+        const filterSel = $('#consumptionFilterMember');
+        if (!sel) return;
+        const currentVal = sel.value;
+        const currentFilter = filterSel ? filterSel.value : '';
+        sel.innerHTML = '<option value="">-- Select Member --</option>';
+        const sorted = [...members].sort((a, b) => a.name.localeCompare(b.name));
+        sorted.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.memberId + '|' + m.name;
+            opt.textContent = m.memberId + ' \u2014 ' + m.name;
+            sel.appendChild(opt);
+        });
+        if (currentVal) sel.value = currentVal;
+
+        // Filter dropdown
+        if (filterSel) {
+            filterSel.innerHTML = '<option value="">All Members</option>';
+            const memberNames = [...new Set(consumption.map(c => c.memberId + '|' + c.memberName))];
+            memberNames.sort((a, b) => a.split('|')[1].localeCompare(b.split('|')[1]));
+            memberNames.forEach(key => {
+                const [mid, mname] = key.split('|');
+                const opt = document.createElement('option');
+                opt.value = mid;
+                opt.textContent = mid + ' \u2014 ' + mname;
+                filterSel.appendChild(opt);
+            });
+            if (currentFilter) filterSel.value = currentFilter;
+        }
+    }
+
+    function renderConsumptionTable() {
+        const filterMember = ($('#consumptionFilterMember')?.value || '');
+        let fc = filteredConsumption();
+        if (filterMember) {
+            fc = fc.filter(c => c.memberId === filterMember);
+        }
+        fc.sort((a, b) => b.date.localeCompare(a.date));
+
+        const tbody = $('#consumptionTableBody');
+        const noMsg = $('#noConsumptionMsg');
+        noMsg.style.display = fc.length ? 'none' : 'block';
+        tbody.innerHTML = '';
+
+        // Summary
+        const allFiltered = filteredConsumption();
+        const totalShells = allFiltered.reduce((sum, c) => sum + (c.shells || 0), 0);
+        const totalAmount = allFiltered.reduce((sum, c) => sum + (c.amount || 0), 0);
+        const uniqueMembers = new Set(allFiltered.map(c => c.memberId)).size;
+        $('#totalConsumptionShells').textContent = totalShells.toLocaleString();
+        $('#totalConsumptionAmount').textContent = formatCurrency(totalAmount);
+        $('#totalConsumptionMembers').textContent = uniqueMembers;
+
+        fc.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${escapeHtml(c.date)}</td>
+                <td><span class="badge bg-dark border border-gold-subtle text-gold fw-bold">${escapeHtml(c.memberId)}</span></td>
+                <td><strong>${escapeHtml(c.memberName)}</strong></td>
+                <td class="text-gold fw-bold">${c.shells || 0}</td>
+                <td class="text-info fw-bold">${c.amount ? formatCurrency(c.amount) : '\u2014'}</td>
+                <td class="text-muted">${escapeHtml(c.notes || '\u2014')}</td>
+                <td class="text-center"><button class="btn-icon-delete" title="Delete"><i class="bi bi-trash"></i></button></td>
+            `;
+            tr.querySelector('.btn-icon-delete').addEventListener('click', () => requestDelete('consumption', c.id));
+            tbody.appendChild(tr);
+        });
+    }
+
     // ---- Render Read-Only Members Directory ----
     function renderViewMembersTable() {
         const searchVal = ($('#viewMemberSearch')?.value || '').toLowerCase();
@@ -902,7 +1013,9 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         renderDebtsTable();
         renderMembersTable();
         renderViewMembersTable();
+        renderConsumptionTable();
         populateDebtMemberDropdown();
+        populateConsumptionMemberDropdown();
         if (currentRole) {
             const isAdmin = currentRole === 'admin';
             $$('.btn-icon-delete').forEach(btn => {
@@ -1098,6 +1211,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         'expenses': { btn: '#tab-btn-expense-history', admin: false },
         'summary': { btn: '#tab-btn-daily-summary', admin: false },
         'debts': { btn: '#tab-btn-debts', admin: false },
+        'consumption': { btn: '#tab-btn-consumption', admin: true },
         'members': { btn: '#tab-btn-view-members', admin: false },
         'manage-members': { btn: '#tab-btn-members', admin: true },
         'report': { btn: '#tab-btn-report', admin: false },
@@ -1239,6 +1353,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         initDebtForm();
         initMemberForm();
         initReport();
+        initConsumptionForm();
         initChangePinForm();
         initTimeoutSettings();
         initRouter();
