@@ -1003,6 +1003,60 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             adminPinBox.style.display = 'none';
             loginAdmin.style.display = '';
             loginUser.style.display = '';
+            history.replaceState(null, '', location.pathname);
+        });
+    }
+
+    // ---- Hash-Based Routing ----
+    const TAB_ROUTES = {
+        'record-sale':     { btn: '#tab-btn-sales',           admin: true },
+        'record-expense':  { btn: '#tab-btn-expenses',        admin: true },
+        'sales':           { btn: '#tab-btn-history',          admin: false },
+        'expenses':        { btn: '#tab-btn-expense-history',  admin: false },
+        'summary':         { btn: '#tab-btn-daily-summary',    admin: false },
+        'debts':           { btn: '#tab-btn-debts',            admin: false },
+        'members':         { btn: '#tab-btn-view-members',     admin: false },
+        'manage-members':  { btn: '#tab-btn-members',          admin: true },
+        'report':          { btn: '#tab-btn-report',           admin: false },
+        'security':        { btn: '#tab-btn-security',         admin: true },
+    };
+
+    function getRouteFromBtn(btnId) {
+        for (const [route, cfg] of Object.entries(TAB_ROUTES)) {
+            if (cfg.btn === '#' + btnId) return route;
+        }
+        return null;
+    }
+
+    function navigateToHash(hash) {
+        const route = (hash || '').replace('#', '');
+        const cfg = TAB_ROUTES[route];
+        if (!cfg) return false;
+        if (cfg.admin && currentRole !== 'admin') return false;
+        const btn = $(cfg.btn);
+        if (!btn) return false;
+        const bsTab = new bootstrap.Tab(btn);
+        bsTab.show();
+        return true;
+    }
+
+    function syncHashFromTab() {
+        // Listen to Bootstrap tab show events and update hash
+        const tabContainer = $('#mainTabs');
+        if (!tabContainer) return;
+        tabContainer.addEventListener('shown.bs.tab', (e) => {
+            const btnId = e.target.id;
+            const route = getRouteFromBtn(btnId);
+            if (route && location.hash !== '#' + route) {
+                history.pushState(null, '', '#' + route);
+            }
+        });
+    }
+
+    function initRouter() {
+        syncHashFromTab();
+        window.addEventListener('popstate', () => {
+            if (currentRole) navigateToHash(location.hash);
         });
     }
 
@@ -1026,20 +1080,22 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             btn.style.display = isAdmin ? '' : 'none';
         });
 
-        // Activate the correct first tab
+        // Activate the correct first tab (or from hash)
         const tabList = $('#mainTabs');
-        if (!isAdmin) {
-            // Click the first visible tab (Sales History)
-            const firstVisibleLink = tabList.querySelector('.nav-item:not([data-role="admin"]) .nav-link');
-            if (firstVisibleLink) {
-                const bsTab = new bootstrap.Tab(firstVisibleLink);
-                bsTab.show();
-            }
-        } else {
-            const adminFirstLink = tabList.querySelector('#tab-btn-sales');
-            if (adminFirstLink) {
-                const bsTab = new bootstrap.Tab(adminFirstLink);
-                bsTab.show();
+        const hashNavigated = location.hash && navigateToHash(location.hash);
+        if (!hashNavigated) {
+            if (!isAdmin) {
+                const firstVisibleLink = tabList.querySelector('.nav-item:not([data-role="admin"]) .nav-link');
+                if (firstVisibleLink) {
+                    const bsTab = new bootstrap.Tab(firstVisibleLink);
+                    bsTab.show();
+                }
+            } else {
+                const adminFirstLink = tabList.querySelector('#tab-btn-sales');
+                if (adminFirstLink) {
+                    const bsTab = new bootstrap.Tab(adminFirstLink);
+                    bsTab.show();
+                }
             }
         }
     }
@@ -1100,6 +1156,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         initReport();
         initChangePinForm();
         initTimeoutSettings();
+        initRouter();
         // View Members search
         const viewSearch = $('#viewMemberSearch');
         if (viewSearch) viewSearch.addEventListener('input', () => renderViewMembersTable());
