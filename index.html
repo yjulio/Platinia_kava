@@ -594,9 +594,28 @@
                     </div>
 
                     <!-- Members Summary -->
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <span class="text-muted small fw-semibold"><i class="bi bi-people me-1"></i>Total Members:
-                            <strong class="text-gold" id="memberCount">0</strong></span>
+                    <div class="row g-3 mb-3">
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Total Members</small>
+                                <span class="fs-5 fw-bold text-gold" id="memberCount">0</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Fees Collected</small>
+                                <span class="fs-5 fw-bold text-success" id="feesCollected">0 VT</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Fees Outstanding</small>
+                                <span class="fs-5 fw-bold text-danger" id="feesOutstanding">0 VT</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mb-3">
                         <input type="text" id="memberSearch" class="form-control form-control-sm w-auto"
                             placeholder="Search members..." style="max-width: 200px;">
                     </div>

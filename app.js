@@ -1009,16 +1009,16 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
     // ---- Hash-Based Routing ----
     const TAB_ROUTES = {
-        'record-sale':     { btn: '#tab-btn-sales',           admin: true },
-        'record-expense':  { btn: '#tab-btn-expenses',        admin: true },
-        'sales':           { btn: '#tab-btn-history',          admin: false },
-        'expenses':        { btn: '#tab-btn-expense-history',  admin: false },
-        'summary':         { btn: '#tab-btn-daily-summary',    admin: false },
-        'debts':           { btn: '#tab-btn-debts',            admin: false },
-        'members':         { btn: '#tab-btn-view-members',     admin: false },
-        'manage-members':  { btn: '#tab-btn-members',          admin: true },
-        'report':          { btn: '#tab-btn-report',           admin: false },
-        'security':        { btn: '#tab-btn-security',         admin: true },
+        'record-sale': { btn: '#tab-btn-sales', admin: true },
+        'record-expense': { btn: '#tab-btn-expenses', admin: true },
+        'sales': { btn: '#tab-btn-history', admin: false },
+        'expenses': { btn: '#tab-btn-expense-history', admin: false },
+        'summary': { btn: '#tab-btn-daily-summary', admin: false },
+        'debts': { btn: '#tab-btn-debts', admin: false },
+        'members': { btn: '#tab-btn-view-members', admin: false },
+        'manage-members': { btn: '#tab-btn-members', admin: true },
+        'report': { btn: '#tab-btn-report', admin: false },
+        'security': { btn: '#tab-btn-security', admin: true },
     };
 
     function getRouteFromBtn(btnId) {
