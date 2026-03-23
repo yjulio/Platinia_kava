@@ -494,7 +494,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         sorted.forEach(m => {
             const opt = document.createElement('option');
             opt.value = m.name;
-            opt.textContent = m.name + (m.role && m.role !== 'Member' ? ' (' + m.role + ')' : '');
+            opt.textContent = (m.memberId ? m.memberId + ' — ' : '') + m.name + (m.role && m.role !== 'Member' ? ' (' + m.role + ')' : '');
             sel.appendChild(opt);
         });
         const otherOpt = document.createElement('option');
@@ -564,6 +564,15 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     // ---- Member Form ----
     let editingMemberId = null;
 
+    function nextMemberId() {
+        const nums = members.map(m => {
+            const match = (m.memberId || '').match(/^M(\d+)$/);
+            return match ? parseInt(match[1], 10) : 0;
+        });
+        const max = nums.length ? Math.max(...nums) : 0;
+        return 'M' + String(max + 1).padStart(3, '0');
+    }
+
     function initMemberForm() {
         const memberForm = $('#memberForm');
         const memberJoined = $('#memberJoined');
@@ -592,6 +601,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             } else {
                 members.push({
                     id: generateId(),
+                    memberId: nextMemberId(),
                     name,
                     phone,
                     role,
@@ -628,7 +638,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
     function renderMembersTable() {
         const searchVal = ($('#memberSearch')?.value || '').toLowerCase();
         const filtered = members
-            .filter(m => !searchVal || m.name.toLowerCase().includes(searchVal) || (m.role || '').toLowerCase().includes(searchVal) || (m.phone || '').includes(searchVal))
+            .filter(m => !searchVal || m.name.toLowerCase().includes(searchVal) || (m.role || '').toLowerCase().includes(searchVal) || (m.phone || '').includes(searchVal) || (m.memberId || '').toLowerCase().includes(searchVal))
             .sort((a, b) => a.name.localeCompare(b.name));
 
         const tbody = $('#membersTableBody');
@@ -652,6 +662,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             const badgeClass = roleBadgeColors[m.role] || 'bg-secondary bg-opacity-50';
 
             tr.innerHTML = `
+                <td><span class="badge bg-dark border border-gold-subtle text-gold fw-bold">${escapeHtml(m.memberId || '—')}</span></td>
                 <td><strong>${escapeHtml(m.name)}</strong></td>
                 <td class="text-muted">${escapeHtml(m.phone || '—')}</td>
                 <td><span class="badge ${badgeClass}">${escapeHtml(m.role || 'Member')}</span></td>
