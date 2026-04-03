@@ -5,6 +5,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const os = require('os');
 
 const DATA_PATH = path.join(__dirname, 'kava-data.json');
 const PORT = process.env.PORT || 4000;
@@ -38,6 +39,7 @@ if (!store.settings) store.settings = { adminPin: '1234', timeout: '15' };
 if (!store.sales) store.sales = [];
 if (!store.expenses) store.expenses = [];
 if (!store.debts) store.debts = [];
+if (!store.transactions) store.transactions = [];
 saveData(store);
 
 // ---- ID Generation ----
@@ -172,10 +174,65 @@ app.put('/api/auth/pin', (req, res) => {
     res.json({ ok: true });
 });
 
+// ---- Transactions (individual barman till entries) ----
+app.get('/api/transactions', (_req, res) => {
+    store = loadData();
+    res.json([...store.transactions].sort((a, b) => {
+        const dc = b.date.localeCompare(a.date);
+        return dc !== 0 ? dc : b.time.localeCompare(a.time);
+    }));
+});
+
+app.post('/api/transactions', (req, res) => {
+    const { id, date, time, amount, note } = req.body;
+    if (!date || !amount) return res.status(400).json({ error: 'Missing required fields' });
+    store = loadData();
+    const record = { id: id || generateId(), date, time: time || '', amount: +amount, note: note || '' };
+    if (!store.transactions.find(t => t.id === record.id)) {
+        store.transactions.push(record);
+        saveData(store);
+    }
+    res.status(201).json(record);
+});
+
+app.post('/api/transactions/sync', (req, res) => {
+    const { items } = req.body;
+    if (!Array.isArray(items) || items.length === 0) return res.json({ synced: 0 });
+    store = loadData();
+    const existingIds = new Set(store.transactions.map(t => t.id));
+    let synced = 0;
+    items.forEach(item => {
+        if (!item.date || !item.amount) return;
+        const id = item.id || generateId();
+        if (!existingIds.has(id)) {
+            store.transactions.push({ id, date: item.date, time: item.time || '', amount: +item.amount, note: item.note || '' });
+            existingIds.add(id);
+            synced++;
+        }
+    });
+    if (synced > 0) saveData(store);
+    res.json({ synced });
+});
+
+app.delete('/api/transactions/:id', (req, res) => {
+    store = loadData();
+    store.transactions = store.transactions.filter(t => t.id !== req.params.id);
+    saveData(store);
+    res.json({ ok: true });
+});
+
 // ---- Serve frontend static files ----
 app.use(express.static(path.join(__dirname, '..')));
 
 // ---- Start ----
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Kava Sales Book running at http://127.0.0.1:${PORT}`);
+    const nets = os.networkInterfaces();
+    for (const iface of Object.values(nets)) {
+        for (const net of iface) {
+            if (net.family === 'IPv4' && !net.internal) {
+                console.log(`  Barman page (phone): http://${net.address}:${PORT}/barman.html`);
+            }
+        }
+    }
 });

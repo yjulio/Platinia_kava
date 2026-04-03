@@ -19,15 +19,16 @@
     }
 
     async function loadAllData() {
-        const [s, e, d] = await Promise.all([
-            api('/sales'), api('/expenses'), api('/debts')
+        const [s, e, d, tx] = await Promise.all([
+            api('/sales'), api('/expenses'), api('/debts'), api('/transactions')
         ]);
-        sales = s; expenses = e; debts = d;
+        sales = s; expenses = e; debts = d; transactions = tx;
     }
 
     let sales = [];
     let expenses = [];
     let debts = [];
+    let transactions = [];
     let activeFilter = null;
     let currentRole = null;
     let failedAttempts = 0;
@@ -106,6 +107,15 @@
         const totalKilos = fs.reduce((sum, s) => sum + (s.kilos || 0), 0);
         const totalExpenses = fe.reduce((sum, e) => sum + e.amount, 0);
         const profit = totalSales - totalExpenses;
+
+        // Today's till
+        const today = todayISO();
+        const todayTx = (transactions || []).filter(t => t.date === today);
+        const tillTotal = todayTx.reduce((s, t) => s + (t.amount || 0), 0);
+        const tillEl = $('#todaysTill');
+        if (tillEl) tillEl.textContent = formatCurrency(tillTotal);
+        const cntEl = $('#todaysTransCount');
+        if (cntEl) cntEl.textContent = todayTx.length + ' transaction' + (todayTx.length !== 1 ? 's' : '') + ' today';
 
         $('#totalSales').textContent = formatCurrency(totalSales);
         $('#totalKilos').textContent = totalKilos.toFixed(2) + ' kg';

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#0d0d0d">
+    <title>Nakamal – Barman</title>
+    <link rel="icon" href="nakamal-logo.png">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0d0d0d;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100svh;
+            padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+        }
+
+        a {
+            color: #d4a017;
+            text-decoration: none;
+        }
+
+        /* Header */
+        .hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #181818;
+            border-bottom: 1px solid #2a2a2a;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .hdr-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #d4a017;
+        }
+
+        .hdr-brand img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
+
+        .hdr-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .78rem;
+            color: #888;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+            flex-shrink: 0;
+        }
+
+        .dot.off {
+            background: #dc3545;
+        }
+
+        /* Main */
+        .main {
+            padding: 16px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Till Card */
+        .till-card {
+            background: linear-gradient(135deg, #1e1a00 0%, #181818 100%);
+            border: 1.5px solid #d4a017;
+            border-radius: 18px;
+            padding: 22px 20px;
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .till-label {
+            text-transform: uppercase;
+            font-size: .68rem;
+            letter-spacing: .12em;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .till-amount {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #d4a017;
+            line-height: 1.1;
+        }
+
+        .till-count {
+            font-size: .83rem;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        /* Section Heading */
+        .sec {
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        /* Presets */
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .pre-btn {
+            background: #1c1c1c;
+            border: 1px solid #2e2e2e;
+            border-radius: 10px;
+            color: #ccc;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 15px 6px;
+            cursor: pointer;
+            transition: background .12s, border-color .12s, color .12s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .pre-btn:active,
+        .pre-btn.sel {
+            background: #2b2200;
+            border-color: #d4a017;
+            color: #d4a017;
+        }
+
+        /* Form */
+        .fg {
+            margin-bottom: 15px;
+        }
+
+        .fg label {
+            display: block;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #777;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .fi {
+            width: 100%;
+            background: #181818;
+            border: 1.5px solid #2e2e2e;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.5rem;
+            padding: 12px 14px;
+            outline: none;
+            transition: border-color .2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .fi:focus {
+            border-color: #d4a017;
+        }
+
+        .fi.note {
+            font-size: 1rem;
+        }
+
+        /* Record Button */
+        .rec-btn {
+            width: 100%;
+            background: #d4a017;
+            border: none;
+            border-radius: 13px;
+            color: #000;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 17px;
+            cursor: pointer;
+            margin-bottom: 22px;
+            letter-spacing: .02em;
+            transition: background .15s, transform .1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .rec-btn:active {
+            background: #b88a12;
+            transform: scale(.98);
+        }
+
+        .rec-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Sync Bar */
+        .sync-bar {
+            display: none;
+            background: #1a1500;
+            border: 1px solid #7a5c00;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .sync-bar.on {
+            display: flex;
+        }
+
+        .sync-txt {
+            font-size: .83rem;
+            color: #d4a017;
+            flex: 1;
+        }
+
+        .sync-btn {
+            background: #d4a017;
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: .82rem;
+            font-weight: 700;
+            padding: 7px 14px;
+            cursor: pointer;
+        }
+
+        /* Recent List */
+        .r-list {
+            list-style: none;
+        }
+
+        .r-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            background: #181818;
+            border-radius: 11px;
+            margin-bottom: 7px;
+        }
+
+        .r-time {
+            font-size: .75rem;
+            color: #555;
+            width: 40px;
+            flex-shrink: 0;
+        }
+
+        .r-amt {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #d4a017;
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        .r-note {
+            font-size: .8rem;
+            color: #555;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .r-del {
+            background: none;
+            border: none;
+            color: #444;
+            font-size: 1rem;
+            padding: 5px 7px;
+            cursor: pointer;
+            border-radius: 6px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .r-del:active {
+            color: #dc3545;
+            background: #1d0000;
+        }
+
+        .empty {
+            text-align: center;
+            color: #444;
+            font-size: .9rem;
+            padding: 28px 0;
+        }
+
+        /* Flash Toast */
+        .flash {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a3d1e;
+            color: #5ef07a;
+            border: 1px solid #28a745;
+            border-radius: 10px;
+            padding: 10px 22px;
+            font-weight: 600;
+            font-size: .9rem;
+            opacity: 0;
+            transition: opacity .25s;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 200;
+        }
+
+        .flash.err {
+            background: #1d0000;
+            color: #ff6b6b;
+            border-color: #dc3545;
+        }
+
+        .flash.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="hdr">
+        <div class="hdr-brand">
+            <img src="nakamal-logo.png" alt="">
+            Nakamal
+        </div>
+        <div class="hdr-status">
+            <span class="dot" id="onlineDot"></span>
+            <span id="onlineLbl">Online</span>
+            &nbsp;·&nbsp;
+            <a href="/" target="_blank">Dashboard ↗</a>
+        </div>
+    </header>
+
+    <main class="main">
+
+        <!-- Today's total -->
+        <div class="till-card">
+            <div class="till-label">Today's Till</div>
+            <div class="till-amount" id="tillAmt">0 VT</div>
+            <div class="till-count" id="tillCnt">0 transactions</div>
+        </div>
+
+        <!-- Quick presets -->
+        <p class="sec">Quick Amount (VT)</p>
+        <div class="presets" id="presets">
+            <button class="pre-btn" data-val="100">100</button>
+            <button class="pre-btn" data-val="200">200</button>
+            <button class="pre-btn" data-val="300">300</button>
+            <button class="pre-btn" data-val="500">500</button>
+            <button class="pre-btn" data-val="1000">1,000</button>
+            <button class="pre-btn" data-val="2000">2,000</button>
+        </div>
+
+        <!-- Custom amount + note -->
+        <div class="fg">
+            <label for="amtIn">Custom Amount (VT)</label>
+            <input id="amtIn" class="fi" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="0" min="1">
+        </div>
+        <div class="fg">
+            <label for="noteIn">Note (optional)</label>
+            <input id="noteIn" class="fi note" type="text" placeholder="e.g. 2 shells, group…" autocomplete="off">
+        </div>
+
+        <button id="recBtn" class="rec-btn">✓&emsp;Record Sale</button>
+
+        <!-- Pending sync bar -->
+        <div class="sync-bar" id="syncBar">
+            <span class="sync-txt" id="syncTxt">0 pending</span>
+            <button class="sync-btn" id="syncBtn">↻ Sync Now</button>
+        </div>
+
+        <!-- Today's transactions -->
+        <p class="sec">Today's Transactions</p>
+        <ul class="r-list" id="rList">
+            <li class="empty">No transactions yet today.</li>
+        </ul>
+
+    </main>
+
+    <div class="flash" id="flash"></div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const QUEUE_KEY = 'nkm_pending';
+            let allTx = [];
+            let isOnline = navigator.onLine;
+
+            // ---- Helpers ----
+            function todayStr() { return new Date().toISOString().split('T')[0]; }
+            function nowTime() { return new Date().toTimeString().slice(0, 5); }
+            function fmtVT(n) { return Number(n).toLocaleString() + ' VT'; }
+            function esc(s) {
+                const d = document.createElement('div');
+                d.textContent = s;
+                return d.innerHTML;
+            }
+            function genId() {
+                return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+            }
+            function loadQ() { try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch (_) { return []; } }
+            function saveQ(q) { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
+
+            // ---- UI refs ----
+            const tillAmt = document.getElementById('tillAmt');
+            const tillCnt = document.getElementById('tillCnt');
+            const amtIn = document.getElementById('amtIn');
+            const noteIn = document.getElementById('noteIn');
+            const recBtn = document.getElementById('recBtn');
+            const rList = document.getElementById('rList');
+            const syncBar = document.getElementById('syncBar');
+            const syncTxt = document.getElementById('syncTxt');
+            const syncBtn = document.getElementById('syncBtn');
+            const onlineDot = document.getElementById('onlineDot');
+            const onlineLbl = document.getElementById('onlineLbl');
+            const flashEl = document.getElementById('flash');
+            let flashTimer;
+
+            // ---- Flash ----
+            function flash(msg, isErr) {
+                clearTimeout(flashTimer);
+                flashEl.textContent = msg;
+                flashEl.className = 'flash' + (isErr ? ' err' : '') + ' show';
+                flashTimer = setTimeout(() => { flashEl.className = 'flash'; }, 2400);
+            }
+
+            // ---- Online status ----
+            function setOnline(val) {
+                isOnline = val;
+                onlineDot.className = 'dot' + (val ? '' : ' off');
+                onlineLbl.textContent = val ? 'Online' : 'Offline';
+                if (val) syncQueue();
+                updateSyncBar();
+            }
+            window.addEventListener('online', () => setOnline(true));
+            window.addEventListener('offline', () => setOnline(false));
+
+            // ---- Sync bar visibility ----
+            function updateSyncBar() {
+                const q = loadQ();
+                if (q.length > 0) {
+                    syncBar.classList.add('on');
+                    syncTxt.textContent = q.length + ' pending — ' + (isOnline ? 'tap to sync' : 'offline');
+                } else {
+                    syncBar.classList.remove('on');
+                }
+            }
+
+            // ---- Till totals ----
+            function updateTill() {
+                const today = todayStr();
+                const todays = allTx.filter(t => t.date === today);
+                const total = todays.reduce((s, t) => s + (t.amount || 0), 0);
+                tillAmt.textContent = fmtVT(total);
+                tillCnt.textContent = todays.length + ' transaction' + (todays.length !== 1 ? 's' : '');
+            }
+
+            // ---- Render list ----
+            function renderList() {
+                const today = todayStr();
+                const todays = allTx.filter(t => t.date === today)
+                    .sort((a, b) => b.time.localeCompare(a.time));
+                if (!todays.length) {
+                    rList.innerHTML = '<li class="empty">No transactions yet today.</li>';
+                    return;
+                }
+                rList.innerHTML = todays.map(t => `
+            <li class="r-item">
+                <span class="r-time">${esc(t.time)}</span>
+                <span class="r-amt">${fmtVT(t.amount)}</span>
+                <span class="r-note">${esc(t.note || '')}</span>
+                <button class="r-del" data-id="${t.id}" title="Delete">✕</button>
+            </li>
+        `).join('');
+            }
+
+            // ---- Load from server ----
+            async function loadTx() {
+                try {
+                    const res = await fetch('/api/transactions');
+                    if (!res.ok) return;
+                    allTx = await res.json();
+                    updateTill();
+                    renderList();
+                } catch (_) { /* offline */ }
+            }
+
+            // ---- Sync queue ----
+            async function syncQueue() {
+                const q = loadQ();
+                if (!q.length) { updateSyncBar(); return; }
+                syncTxt.textContent = 'Syncing ' + q.length + '…';
+                try {
+                    const res = await fetch('/api/transactions/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ items: q }),
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        saveQ([]);
+                        updateSyncBar();
+                        if (data.synced > 0) {
+                            flash('↑ Synced ' + data.synced + ' sale' + (data.synced !== 1 ? 's' : ''));
+                            await loadTx();
+                        }
+                    } else {
+                        syncTxt.textContent = q.length + ' pending — try again';
+                    }
+                } catch (_) {
+                    updateSyncBar();
+                }
+            }
+            syncBtn.addEventListener('click', syncQueue);
+
+            // ---- Preset buttons ----
+            document.getElementById('presets').addEventListener('click', e => {
+                const btn = e.target.closest('.pre-btn');
+                if (!btn) return;
+                amtIn.value = btn.dataset.val;
+                document.querySelectorAll('.pre-btn').forEach(b => b.classList.remove('sel'));
+                btn.classList.add('sel');
+            });
+            amtIn.addEventListener('input', () => {
+                document.querySelectorAll('.pre-btn').forEach(b => b.classList.remove('sel'));
+            });
+
+            // ---- Record sale ----
+            recBtn.addEventListener('click', async () => {
+                const amount = parseInt(amtIn.value, 10);
+                if (!amount || amount <= 0) { flash('Enter a valid amount', true); return; }
+
+                const item = {
+                    id: genId(),
+                    date: todayStr(),
+                    time: nowTime(),
+                    amount,
+                    note: noteIn.value.trim(),
+                };
+
+                // Optimistic local update
+                allTx.push(item);
+                updateTill();
+                renderList();
+
+                // Reset form
+                amtIn.value = '';
+                noteIn.value = '';
+                document.querySelectorAll('.pre-btn').forEach(b => b.classList.remove('sel'));
+                amtIn.focus();
+
+                if (isOnline) {
+                    try {
+                        const res = await fetch('/api/transactions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(item),
+                        });
+                        if (res.ok) {
+                            flash('✓ ' + fmtVT(amount) + ' recorded');
+                        } else {
+                            throw new Error();
+                        }
+                    } catch (_) {
+                        const q = loadQ();
+                        q.push(item);
+                        saveQ(q);
+                        updateSyncBar();
+                        flash('Saved offline', true);
+                    }
+                } else {
+                    const q = loadQ();
+                    q.push(item);
+                    saveQ(q);
+                    updateSyncBar();
+                    flash('Saved offline — will sync when online', true);
+                }
+            });
+
+            // ---- Enter key submits ----
+            [amtIn, noteIn].forEach(el => {
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') recBtn.click();
+                });
+            });
+
+            // ---- Delete ----
+            rList.addEventListener('click', async e => {
+                const btn = e.target.closest('.r-del');
+                if (!btn) return;
+                const id = btn.dataset.id;
+                allTx = allTx.filter(t => t.id !== id);
+                updateTill();
+                renderList();
+                try { await fetch('/api/transactions/' + id, { method: 'DELETE' }); } catch (_) { /* ignore */ }
+            });
+
+            // ---- Init ----
+            setOnline(navigator.onLine);
+            loadTx();
+            updateSyncBar();
+            setInterval(loadTx, 30000);   // refresh every 30s
+            amtIn.focus();
+
+        })();
+    </script>
+</body>
+
+</html>
