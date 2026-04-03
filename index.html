@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indigenous Trade Limited - Kava Sales Book</title>
+    <title>Nakamal - Kava Sales Book</title>
     <meta name="description" content="Kava Sales & Profit Management for Manples Kava Coop">
     <!-- Open Graph (link previews) -->
-    <meta property="og:title" content="Indigenous Trade Limited - Kava Sales Book">
+    <meta property="og:title" content="Nakamal - Kava Sales Book">
     <meta property="og:description" content="Kava Sales & Profit Management for Manples Kava Coop">
     <meta property="og:image" content="https://kavacoop.innovatelhubltd.com/logo.png">
     <meta property="og:url" content="https://kavacoop.innovatelhubltd.com/">
@@ -29,6 +29,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Graffiti Stream Extrude Font -->
     <link href="https://fonts.cdnfonts.com/css/graffiti-stream-extrude" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <!-- Custom Overrides -->
     <link rel="stylesheet" href="styles.css?v=2">
 </head>
@@ -38,8 +40,7 @@
     <div id="landingPage" class="landing-page">
         <div class="landing-overlay"></div>
         <div class="landing-content text-center position-relative">
-            <img src="logo.png" alt="Manples Kava Coop" class="landing-logo mb-3">
-            <h1 class="landing-title fw-800">Indigenous Cooperative Marketing and Trading Society Limited</h1>
+            <img src="nakamal-logo.png" alt="Nakamal" class="landing-logo mb-2">
             <p class="landing-subtitle mb-4">Kava Sales &amp; Profit Management</p>
             <hr class="landing-divider mx-auto mb-4">
             <div class="d-flex gap-3 justify-content-center flex-wrap" id="roleButtons">
@@ -74,8 +75,9 @@
         <nav class="navbar navbar-dark bg-surface border-bottom border-gold-subtle sticky-top">
             <div class="container-fluid px-3 px-md-4">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-                    <img src="logo.png" alt="Logo" width="36" height="36" class="rounded-circle">
-                    <span class="fw-bold text-gold">Kava Sales Book</span>
+                    <img src="nakamal-logo.png" alt="Nakamal" width="40" height="40"
+                        style="object-fit:contain;mix-blend-mode:multiply;">
+                    <span class="fw-bold text-gold">Nakamal</span>
                 </a>
                 <div class="d-flex align-items-center gap-3">
                     <span id="roleLabel" class="badge"></span>
@@ -182,18 +184,14 @@
                         <i class="bi bi-person-exclamation me-1 d-none d-md-inline"></i>Debts
                     </button>
                 </li>
+
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-btn-view-members" data-bs-toggle="pill"
-                        data-bs-target="#tab-view-members" type="button" role="tab">
-                        <i class="bi bi-people me-1 d-none d-md-inline"></i>Members
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation" data-role="admin">
-                    <button class="nav-link" id="tab-btn-members" data-bs-toggle="pill" data-bs-target="#tab-members"
+                    <button class="nav-link" id="tab-btn-trend" data-bs-toggle="pill" data-bs-target="#tab-trend"
                         type="button" role="tab">
-                        <i class="bi bi-gear me-1 d-none d-md-inline"></i>Manage Members
+                        <i class="bi bi-graph-up me-1 d-none d-md-inline"></i>Trends
                     </button>
                 </li>
+
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="tab-btn-report" data-bs-toggle="pill" data-bs-target="#tab-report"
                         type="button" role="tab">
@@ -408,11 +406,8 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label for="debtMember" class="form-label">Member Name</label>
-                                    <select id="debtMember" class="form-select" required>
-                                        <option value="">-- Select Member --</option>
-                                    </select>
-                                    <input type="text" id="debtMemberOther" class="form-control mt-2 d-none"
-                                        placeholder="Type member name...">
+                                    <input type="text" id="debtMember" class="form-control" required
+                                        placeholder="e.g. John Naupa">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="debtAmount" class="form-label">Amount Owed (VT)</label>
@@ -479,202 +474,9 @@
                     <p class="text-muted text-center py-4 fst-italic mb-0" id="noDebtsMsg">No debts recorded yet.</p>
                 </div>
 
-                <!-- View Members (All Users) -->
-                <div class="tab-pane fade p-4" id="tab-view-members" role="tabpanel">
-                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-people me-2"></i>Member Directory</h5>
 
-                    <!-- Summary Cards -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
-                                <small class="text-muted text-uppercase fw-semibold">Total Members</small>
-                                <span class="fs-5 fw-bold text-gold" id="viewMemberCount">0</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
-                                <small class="text-muted text-uppercase fw-semibold">Fees Collected</small>
-                                <span class="fs-5 fw-bold text-success" id="viewFeesCollected">0 VT</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
-                                <small class="text-muted text-uppercase fw-semibold">Fees Outstanding</small>
-                                <span class="fs-5 fw-bold text-danger" id="viewFeesOutstanding">0 VT</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Search -->
-                    <div class="d-flex justify-content-end mb-3">
-                        <input type="text" id="viewMemberSearch" class="form-control form-control-sm w-auto"
-                            placeholder="Search members..." style="max-width: 220px;">
-                    </div>
 
-                    <!-- Read-only Members Table -->
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover table-striped align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Phone</th>
-                                    <th>Role</th>
-                                    <th>Joined</th>
-                                    <th>Fee</th>
-                                    <th>Fee Status</th>
-                                    <th>Consumption</th>
-                                </tr>
-                            </thead>
-                            <tbody id="viewMembersTableBody"></tbody>
-                        </table>
-                    </div>
-                    <p class="text-muted text-center py-4 fst-italic mb-0" id="noViewMembersMsg">No members yet.</p>
-                </div>
-
-                <!-- Members Management -->
-                <div class="tab-pane fade p-4" id="tab-members" role="tabpanel">
-                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-people me-2"></i>Members Management</h5>
-
-                    <!-- Import / Export Bar -->
-                    <div class="d-flex gap-2 flex-wrap mb-4">
-                        <button id="btnImportMembers" class="btn btn-outline-gold btn-sm">
-                            <i class="bi bi-upload me-1"></i>Import CSV
-                        </button>
-                        <button id="btnExportMembers" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-download me-1"></i>Export CSV
-                        </button>
-                        <input type="file" id="importMembersFile" accept=".csv" class="d-none">
-                        <span class="text-muted small align-self-center ms-2 d-none d-md-inline">
-                            CSV columns: Member ID, Name, Phone, Role, Joined, Fee, Fee Status, Notes
-                        </span>
-                    </div>
-
-                    <!-- Add Member Form -->
-                    <div class="mb-4">
-                        <h6 class="text-muted fw-semibold mb-3"><i class="bi bi-person-plus me-1"></i>Add New Member
-                        </h6>
-                        <form id="memberForm">
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label for="memberIdInput" class="form-label">Member ID</label>
-                                    <input type="text" id="memberIdInput" class="form-control" required
-                                        placeholder="e.g. M001">
-                                </div>
-                                <div class="col-md-5">
-                                    <label for="memberName" class="form-label">Full Name</label>
-                                    <input type="text" id="memberName" class="form-control" required
-                                        placeholder="e.g. John Naupa">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="memberPhone" class="form-label">Phone <span
-                                            class="text-muted">(optional)</span></label>
-                                    <input type="tel" id="memberPhone" class="form-control" placeholder="e.g. 7712345">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="memberRole" class="form-label">Role / Position</label>
-                                    <select id="memberRole" class="form-select">
-                                        <option value="Member">Member</option>
-                                        <option value="Chairman">Chairman</option>
-                                        <option value="Treasurer">Treasurer</option>
-                                        <option value="Secretary">Secretary</option>
-                                        <option value="Committee">Committee</option>
-                                        <option value="Staff">Staff</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="memberJoined" class="form-label">Date Joined</label>
-                                    <input type="date" id="memberJoined" class="form-control" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="memberFee" class="form-label">Membership Fee (VT)</label>
-                                    <input type="number" id="memberFee" class="form-control" min="0" step="1"
-                                        placeholder="e.g. 5000">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="memberFeeStatus" class="form-label">Fee Status</label>
-                                    <select id="memberFeeStatus" class="form-select">
-                                        <option value="Unpaid">Unpaid</option>
-                                        <option value="Paid">Paid</option>
-                                        <option value="Partial">Partial</option>
-                                        <option value="Exempt">Exempt</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4" id="memberFeePaidAmountWrap" style="display:none">
-                                    <label for="memberFeePaidAmount" class="form-label">Amount Paid (VT)</label>
-                                    <input type="number" id="memberFeePaidAmount" class="form-control" min="0" step="1"
-                                        placeholder="e.g. 2500">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="memberConsumption" class="form-label">Total Consumption (VT)</label>
-                                    <input type="number" id="memberConsumption" class="form-control" min="0" step="1"
-                                        placeholder="e.g. 3000">
-                                </div>
-                                <div class="col-md-8">
-                                    <label for="memberNotes" class="form-label">Notes <span
-                                            class="text-muted">(optional)</span></label>
-                                    <input type="text" id="memberNotes" class="form-control"
-                                        placeholder="Any notes about this member...">
-                                </div>
-                            </div>
-                            <div class="mt-3 text-end">
-                                <button type="submit" class="btn btn-gold px-4" id="memberSubmitBtn">
-                                    <i class="bi bi-check-lg me-1"></i>Add Member
-                                </button>
-                            </div>
-                        </form>
-                        <hr class="border-secondary my-4">
-                    </div>
-
-                    <!-- Members Summary -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
-                                <small class="text-muted text-uppercase fw-semibold">Total Members</small>
-                                <span class="fs-5 fw-bold text-gold" id="memberCount">0</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
-                                <small class="text-muted text-uppercase fw-semibold">Fees Collected</small>
-                                <span class="fs-5 fw-bold text-success" id="feesCollected">0 VT</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
-                                <small class="text-muted text-uppercase fw-semibold">Fees Outstanding</small>
-                                <span class="fs-5 fw-bold text-danger" id="feesOutstanding">0 VT</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end mb-3">
-                        <input type="text" id="memberSearch" class="form-control form-control-sm w-auto"
-                            placeholder="Search members..." style="max-width: 200px;">
-                    </div>
-
-                    <!-- Members Table -->
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover table-striped align-middle mb-0" id="membersTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Phone</th>
-                                    <th>Role</th>
-                                    <th>Joined</th>
-                                    <th>Fee</th>
-                                    <th>Fee Status</th>
-                                    <th>Consumption</th>
-                                    <th>Notes</th>
-                                    <th class="text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="membersTableBody"></tbody>
-                        </table>
-                    </div>
-                    <p class="text-muted text-center py-4 fst-italic mb-0" id="noMembersMsg">No members added yet.</p>
-                </div>
 
                 <!-- Security Settings (Admin Only) -->
                 <div class="tab-pane fade p-4" id="tab-security" role="tabpanel">
@@ -763,6 +565,75 @@
                     </div>
                 </div>
 
+                <!-- Trends -->
+                <div class="tab-pane fade p-4" id="tab-trend" role="tabpanel">
+                    <h5 class="text-gold fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>Sales &amp; Profit Trends</h5>
+                    <div class="d-flex gap-3 align-items-end flex-wrap mb-4">
+                        <div>
+                            <label for="trendPeriod" class="form-label small">Period</label>
+                            <select id="trendPeriod" class="form-select form-select-sm" style="width:auto">
+                                <option value="30">Last 30 days</option>
+                                <option value="60">Last 60 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="all">All time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Daily line chart -->
+                    <h6 class="text-muted fw-semibold small text-uppercase mb-2"><i
+                            class="bi bi-calendar3 me-1"></i>Daily Timeline</h6>
+                    <div class="card bg-surface-raised border border-gold-subtle p-3 mb-3">
+                        <canvas id="trendChart" height="110"></canvas>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Avg Daily Sales</small>
+                                <span class="fs-5 fw-bold text-gold" id="trendAvgSales">0 VT</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Best Day</small>
+                                <span class="fs-5 fw-bold text-success" id="trendBestDay">—</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Best Profit</small>
+                                <span class="fs-5 fw-bold text-success" id="trendBestProfit">0 VT</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day-of-week bar chart -->
+                    <h6 class="text-muted fw-semibold small text-uppercase mb-2"><i
+                            class="bi bi-calendar-week me-1"></i>By Day of Week (All Time Totals)</h6>
+                    <div class="card bg-surface-raised border border-gold-subtle p-3 mb-3">
+                        <canvas id="weekdayChart" height="110"></canvas>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Best Weekday</small>
+                                <span class="fs-5 fw-bold text-gold" id="weekdayBestLabel">—</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Top Sales</small>
+                                <span class="fs-5 fw-bold text-gold" id="weekdayBestSales">0 VT</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card bg-transparent border border-gold-subtle text-center p-3">
+                                <small class="text-muted text-uppercase fw-semibold">Top Profit</small>
+                                <span class="fs-5 fw-bold text-success" id="weekdayBestProfit">0 VT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Report -->
                 <div class="tab-pane fade p-4" id="tab-report" role="tabpanel">
                     <h5 class="text-gold fw-bold mb-3"><i class="bi bi-file-earmark-bar-graph me-2"></i>Committee Report
@@ -788,7 +659,7 @@
 
         <!-- Footer -->
         <footer class="text-center text-muted small py-4 border-top border-secondary">
-            Indigenous Trade Limited &copy; 2026 &mdash; Powered by IHS
+            Nakamal &copy; 2026 &mdash; Powered by IHS
         </footer>
     </div>
 

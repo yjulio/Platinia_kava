@@ -91,10 +91,10 @@ body {
 .landing-logo {
     width: 320px;
     height: 320px;
-    box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.4);
+    mix-blend-mode: multiply;
+    filter: contrast(1.05);
     animation: float 4s ease-in-out infinite;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 @keyframes float {

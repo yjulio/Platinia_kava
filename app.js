@@ -19,16 +19,15 @@
     }
 
     async function loadAllData() {
-        const [s, e, d, m] = await Promise.all([
-            api('/sales'), api('/expenses'), api('/debts'), api('/members')
+        const [s, e, d] = await Promise.all([
+            api('/sales'), api('/expenses'), api('/debts')
         ]);
-        sales = s; expenses = e; debts = d; members = m;
+        sales = s; expenses = e; debts = d;
     }
 
     let sales = [];
     let expenses = [];
     let debts = [];
-    let members = [];
     let activeFilter = null;
     let currentRole = null;
     let failedAttempts = 0;
@@ -247,9 +246,6 @@
             } else if (pendingDeleteType === 'debt') {
                 await api('/debts/' + pendingDeleteId, { method: 'DELETE' });
                 showToast('Debt deleted');
-            } else if (pendingDeleteType === 'member') {
-                await api('/members/' + pendingDeleteId, { method: 'DELETE' });
-                showToast('Member removed');
             }
             deleteModal.hide();
             pendingDeleteType = null;
@@ -425,9 +421,9 @@
 
             reportContent.innerHTML = `
                 <div class="report-header">
-                    <img src="logo.png" alt="Logo" class="report-logo">
-                    <h2>Indigenous Trade Limited</h2>
-                    <h3>Manples Kava Coop</h3>
+                    <img src="nakamal-logo.png" alt="Nakamal" class="report-logo">
+                    <h2>Nakamal</h2>
+                    <h3>Kava Sales Book</h3>
                     <p class="report-period">Monthly Report &mdash; ${escapeHtml(monthName)}</p>
                     <p class="report-date">Generated: ${today}</p>
                 </div>
@@ -446,7 +442,7 @@
                 <tbody>${dailyRows || '<tr><td colspan="6" class="text-center text-muted fst-italic">No records</td></tr>'}</tbody></table>
                 <div class="report-footer">
                     <p>Prepared for Committee Meeting</p>
-                    <p><em>Indigenous Trade Limited &mdash; Together Yumi Build</em></p>
+                    <p><em>Nakamal &mdash; Together Yumi Build</em></p>
                     <div class="signature-lines">
                         <div class="sig-line"><span>Prepared by</span></div>
                         <div class="sig-line"><span>Approved by</span></div>
@@ -461,7 +457,7 @@
         btnPrint.addEventListener('click', () => {
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`<!DOCTYPE html>
-<html><head><title>Committee Report - Indigenous Trade Limited</title>
+<html><head><title>Committee Report - Nakamal</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter','Segoe UI',sans-serif;color:#222;padding:30px;line-height:1.6}
@@ -494,33 +490,18 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         });
     }
 
-    // ---- Debt Form ----
     function initDebtForm() {
         const debtDate = $('#debtDate');
         const debtForm = $('#debtForm');
-        const debtMemberSel = $('#debtMember');
-        const debtMemberOther = $('#debtMemberOther');
+        const debtMemberInput = $('#debtMember');
         debtDate.value = todayISO();
-
-        // Toggle "Other" text input when selected
-        debtMemberSel.addEventListener('change', () => {
-            if (debtMemberSel.value === '__other__') {
-                debtMemberOther.classList.remove('d-none');
-                debtMemberOther.required = true;
-                debtMemberOther.focus();
-            } else {
-                debtMemberOther.classList.add('d-none');
-                debtMemberOther.required = false;
-                debtMemberOther.value = '';
-            }
-        });
 
         debtForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            let member = debtMemberSel.value === '__other__' ? debtMemberOther.value.trim() : debtMemberSel.value;
+            const member = debtMemberInput.value.trim();
             const amount = parseFloat($('#debtAmount').value);
             const notes = $('#debtNotes').value.trim();
-            if (!member) { showToast('Select or enter a member name', true); return; }
+            if (!member) { showToast('Enter a member name', true); return; }
             if (!amount || amount <= 0) { showToast('Enter a valid amount', true); return; }
 
             await api('/debts', {
@@ -530,32 +511,9 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             });
             debtForm.reset();
             debtDate.value = todayISO();
-            debtMemberOther.classList.add('d-none');
-            debtMemberOther.required = false;
-            populateDebtMemberDropdown();
             showToast('Debt recorded for ' + member);
             await refreshAll();
         });
-    }
-
-    // ---- Populate Debt Member Dropdown ----
-    function populateDebtMemberDropdown() {
-        const sel = $('#debtMember');
-        if (!sel) return;
-        const currentVal = sel.value;
-        sel.innerHTML = '<option value="">-- Select Member --</option>';
-        const sorted = [...members].sort((a, b) => a.name.localeCompare(b.name));
-        sorted.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m.name;
-            opt.textContent = (m.memberId ? m.memberId + ' — ' : '') + m.name + (m.role && m.role !== 'Member' ? ' (' + m.role + ')' : '');
-            sel.appendChild(opt);
-        });
-        const otherOpt = document.createElement('option');
-        otherOpt.value = '__other__';
-        otherOpt.textContent = '+ Other (type name)';
-        sel.appendChild(otherOpt);
-        if (currentVal) sel.value = currentVal;
     }
 
     // ---- Render Debts ----
@@ -610,295 +568,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         });
     }
 
-    // ---- Member Form ----
-    let editingMemberId = null;
-
-    function initMemberForm() {
-        const memberForm = $('#memberForm');
-        const memberJoined = $('#memberJoined');
-        const memberIdInput = $('#memberIdInput');
-        const memberFeeStatus = $('#memberFeeStatus');
-        const memberFeePaidWrap = $('#memberFeePaidAmountWrap');
-        memberJoined.value = todayISO();
-
-        // Show/hide partial paid amount field
-        memberFeeStatus.addEventListener('change', () => {
-            memberFeePaidWrap.style.display = memberFeeStatus.value === 'Partial' ? '' : 'none';
-        });
-
-        memberForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const memberId = memberIdInput.value.trim();
-            const name = $('#memberName').value.trim();
-            const phone = $('#memberPhone').value.trim();
-            const role = $('#memberRole').value;
-            const fee = parseFloat($('#memberFee').value) || 0;
-            const feeStatus = memberFeeStatus.value;
-            const feePaidAmount = feeStatus === 'Partial' ? (parseFloat($('#memberFeePaidAmount').value) || 0) : (feeStatus === 'Paid' ? fee : 0);
-            const notes = $('#memberNotes').value.trim();
-            if (!memberId) { showToast('Enter a member ID', true); return; }
-            if (!name) { showToast('Enter member name', true); return; }
-
-            const consumption = parseFloat($('#memberConsumption').value) || 0;
-            const body = { memberId, name, phone, role, joined: memberJoined.value, fee, feeStatus, feePaidAmount, consumption, notes };
-
-            if (editingMemberId) {
-                const result = await api('/members/' + editingMemberId, { method: 'PUT', body });
-                if (result.error) { showToast(result.error, true); return; }
-                editingMemberId = null;
-                memberIdInput.readOnly = false;
-                $('#memberSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-1"></i>Add Member';
-                showToast('Member updated');
-            } else {
-                const result = await api('/members', { method: 'POST', body });
-                if (result.error) { showToast(result.error, true); return; }
-                showToast('Member added: ' + name);
-            }
-            memberForm.reset();
-            memberJoined.value = todayISO();
-            memberFeePaidWrap.style.display = 'none';
-            await refreshAll();
-        });
-
-        // Search
-        $('#memberSearch').addEventListener('input', () => renderMembersTable());
-
-        // ---- Import CSV ----
-        const importBtn = $('#btnImportMembers');
-        const importFile = $('#importMembersFile');
-        importBtn.addEventListener('click', () => importFile.click());
-        importFile.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (evt) => {
-                const text = evt.target.result;
-                const lines = text.split(/\r?\n/).filter(l => l.trim());
-                if (lines.length < 2) { showToast('CSV file is empty or has no data rows', true); return; }
-
-                // Parse header to detect column order
-                const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z ]/g, ''));
-                const colMap = {};
-                const aliases = {
-                    'member id': 'memberId', 'memberid': 'memberId', 'id': 'memberId',
-                    'name': 'name', 'full name': 'name', 'fullname': 'name',
-                    'phone': 'phone', 'telephone': 'phone', 'tel': 'phone',
-                    'role': 'role', 'position': 'role',
-                    'joined': 'joined', 'date joined': 'joined', 'datejoined': 'joined',
-                    'fee': 'fee', 'membership fee': 'fee',
-                    'fee status': 'feeStatus', 'feestatus': 'feeStatus', 'status': 'feeStatus',
-                    'consumption': 'consumption', 'total consumption': 'consumption',
-                    'notes': 'notes', 'note': 'notes',
-                };
-                header.forEach((h, i) => {
-                    if (aliases[h]) colMap[aliases[h]] = i;
-                });
-
-                if (colMap.name === undefined) {
-                    showToast('CSV must have a "Name" column', true);
-                    importFile.value = '';
-                    return;
-                }
-
-                const bulkList = [];
-                let skipped = 0;
-                for (let i = 1; i < lines.length; i++) {
-                    const cols = parseCSVLine(lines[i]);
-                    const get = (key) => cols[colMap[key]]?.trim() || '';
-                    const name = get('name');
-                    if (!name) { skipped++; continue; }
-                    bulkList.push({
-                        memberId: get('memberId') || '',
-                        name,
-                        phone: get('phone'),
-                        role: get('role') || 'Member',
-                        joined: get('joined') || todayISO(),
-                        fee: parseFloat(get('fee')) || 0,
-                        feeStatus: get('feeStatus') || 'Unpaid',
-                        feePaidAmount: 0,
-                        consumption: parseFloat(get('consumption')) || 0,
-                        notes: get('notes'),
-                    });
-                }
-                const result = await api('/members/bulk', { method: 'POST', body: { members: bulkList } });
-                await refreshAll();
-                showToast(result.added + ' members imported' + (skipped ? ' (' + skipped + ' skipped/duplicate)' : ''));
-                importFile.value = '';
-            };
-            reader.readAsText(file);
-        });
-
-        // ---- Export CSV ----
-        $('#btnExportMembers').addEventListener('click', () => {
-            if (!members.length) { showToast('No members to export', true); return; }
-            const headers = ['Member ID', 'Name', 'Phone', 'Role', 'Joined', 'Fee', 'Fee Status', 'Consumption', 'Notes'];
-            const rows = members.map(m => [
-                csvEscape(m.memberId || ''),
-                csvEscape(m.name),
-                csvEscape(m.phone || ''),
-                csvEscape(m.role || 'Member'),
-                csvEscape(m.joined || ''),
-                m.fee || 0,
-                csvEscape(m.feeStatus || 'Unpaid'),
-                m.consumption || 0,
-                csvEscape(m.notes || ''),
-            ].join(','));
-            const csv = [headers.join(','), ...rows].join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'members_' + todayISO() + '.csv';
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('Members exported!');
-        });
-    }
-
-    function editMember(id) {
-        const m = members.find(x => x.id === id);
-        if (!m) return;
-        editingMemberId = id;
-        $('#memberIdInput').value = m.memberId || '';
-        $('#memberName').value = m.name;
-        $('#memberPhone').value = m.phone || '';
-        $('#memberRole').value = m.role || 'Member';
-        $('#memberJoined').value = m.joined || '';
-        $('#memberFee').value = m.fee || '';
-        $('#memberFeeStatus').value = m.feeStatus || 'Unpaid';
-        $('#memberFeePaidAmountWrap').style.display = (m.feeStatus === 'Partial') ? '' : 'none';
-        $('#memberFeePaidAmount').value = m.feePaidAmount || '';
-        $('#memberConsumption').value = m.consumption || '';
-        $('#memberNotes').value = m.notes || '';
-        $('#memberSubmitBtn').innerHTML = '<i class="bi bi-pencil me-1"></i>Update Member';
-        // Scroll to form
-        $('#tab-members').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // ---- Render Members Table ----
-    function renderMembersTable() {
-        const searchVal = ($('#memberSearch')?.value || '').toLowerCase();
-        const filtered = members
-            .filter(m => !searchVal || m.name.toLowerCase().includes(searchVal) || (m.role || '').toLowerCase().includes(searchVal) || (m.phone || '').includes(searchVal) || (m.memberId || '').toLowerCase().includes(searchVal))
-            .sort((a, b) => a.name.localeCompare(b.name));
-
-        const tbody = $('#membersTableBody');
-        const noMsg = $('#noMembersMsg');
-        if (!tbody) return;
-        noMsg.style.display = filtered.length ? 'none' : 'block';
-        tbody.innerHTML = '';
-        $('#memberCount').textContent = members.length;
-
-        // Fee summary
-        const totalFees = members.reduce((sum, m) => sum + (m.fee || 0), 0);
-        const collected = members.reduce((sum, m) => {
-            if (m.feeStatus === 'Paid') return sum + (m.fee || 0);
-            if (m.feeStatus === 'Partial') return sum + (m.feePaidAmount || 0);
-            return sum;
-        }, 0);
-        $('#feesCollected').textContent = formatCurrency(collected);
-        $('#feesOutstanding').textContent = formatCurrency(totalFees - collected);
-
-        const roleBadgeColors = {
-            'Chairman': 'bg-gold text-dark',
-            'Treasurer': 'bg-info text-dark',
-            'Secretary': 'bg-primary',
-            'Committee': 'bg-warning text-dark',
-            'Staff': 'bg-secondary',
-            'Member': 'bg-secondary bg-opacity-50',
-        };
-
-        filtered.forEach(m => {
-            const tr = document.createElement('tr');
-            const badgeClass = roleBadgeColors[m.role] || 'bg-secondary bg-opacity-50';
-
-            const feeStatusBadge = {
-                'Paid': '<span class="badge bg-success">Paid</span>',
-                'Partial': '<span class="badge bg-info text-dark">Partial (' + formatCurrency(m.feePaidAmount || 0) + ')</span>',
-                'Exempt': '<span class="badge bg-secondary">Exempt</span>',
-                'Unpaid': '<span class="badge bg-warning text-dark">Unpaid</span>',
-            };
-
-            tr.innerHTML = `
-                <td><span class="badge bg-dark border border-gold-subtle text-gold fw-bold">${escapeHtml(m.memberId || '—')}</span></td>
-                <td><strong>${escapeHtml(m.name)}</strong></td>
-                <td class="text-muted">${escapeHtml(m.phone || '—')}</td>
-                <td><span class="badge ${badgeClass}">${escapeHtml(m.role || 'Member')}</span></td>
-                <td class="text-muted">${escapeHtml(m.joined || '—')}</td>
-                <td class="fw-bold">${m.fee ? formatCurrency(m.fee) : '—'}</td>
-                <td>${feeStatusBadge[m.feeStatus] || feeStatusBadge['Unpaid']}</td>
-                <td class="fw-bold text-info">${m.consumption ? formatCurrency(m.consumption) : '—'}</td>
-                <td class="text-muted">${escapeHtml(m.notes || '—')}</td>
-                <td class="text-center text-nowrap">
-                    <button class="btn btn-sm btn-outline-gold btn-edit-member me-1" title="Edit"><i class="bi bi-pencil"></i></button>
-                    <button class="btn-icon-delete" title="Delete"><i class="bi bi-trash"></i></button>
-                </td>
-            `;
-            tr.querySelector('.btn-edit-member').addEventListener('click', () => editMember(m.id));
-            tr.querySelector('.btn-icon-delete').addEventListener('click', () => requestDelete('member', m.id));
-            tbody.appendChild(tr);
-        });
-    }
-
-    // ---- Render Read-Only Members Directory ----
-    function renderViewMembersTable() {
-        const searchVal = ($('#viewMemberSearch')?.value || '').toLowerCase();
-        const filtered = members
-            .filter(m => !searchVal || m.name.toLowerCase().includes(searchVal) || (m.role || '').toLowerCase().includes(searchVal) || (m.phone || '').includes(searchVal) || (m.memberId || '').toLowerCase().includes(searchVal))
-            .sort((a, b) => a.name.localeCompare(b.name));
-
-        const tbody = $('#viewMembersTableBody');
-        const noMsg = $('#noViewMembersMsg');
-        if (!tbody) return;
-        noMsg.style.display = filtered.length ? 'none' : 'block';
-        tbody.innerHTML = '';
-        $('#viewMemberCount').textContent = members.length;
-
-        const totalFees = members.reduce((sum, m) => sum + (m.fee || 0), 0);
-        const collected = members.reduce((sum, m) => {
-            if (m.feeStatus === 'Paid') return sum + (m.fee || 0);
-            if (m.feeStatus === 'Partial') return sum + (m.feePaidAmount || 0);
-            return sum;
-        }, 0);
-        $('#viewFeesCollected').textContent = formatCurrency(collected);
-        $('#viewFeesOutstanding').textContent = formatCurrency(totalFees - collected);
-
-        const roleBadgeColors = {
-            'Chairman': 'bg-gold text-dark',
-            'Treasurer': 'bg-info text-dark',
-            'Secretary': 'bg-primary',
-            'Committee': 'bg-warning text-dark',
-            'Staff': 'bg-secondary',
-            'Member': 'bg-secondary bg-opacity-50',
-        };
-
-        const feeStatusBadges = {
-            'Paid': '<span class="badge bg-success">Paid</span>',
-            'Partial': '',
-            'Exempt': '<span class="badge bg-secondary">Exempt</span>',
-            'Unpaid': '<span class="badge bg-warning text-dark">Unpaid</span>',
-        };
-
-        filtered.forEach(m => {
-            const tr = document.createElement('tr');
-            const badgeClass = roleBadgeColors[m.role] || 'bg-secondary bg-opacity-50';
-            const feeBadge = m.feeStatus === 'Partial'
-                ? '<span class="badge bg-info text-dark">Partial (' + formatCurrency(m.feePaidAmount || 0) + ')</span>'
-                : (feeStatusBadges[m.feeStatus] || feeStatusBadges['Unpaid']);
-            tr.innerHTML = `
-                <td><span class="badge bg-dark border border-gold-subtle text-gold fw-bold">${escapeHtml(m.memberId || '—')}</span></td>
-                <td><strong>${escapeHtml(m.name)}</strong></td>
-                <td class="text-muted">${escapeHtml(m.phone || '—')}</td>
-                <td><span class="badge ${badgeClass}">${escapeHtml(m.role || 'Member')}</span></td>
-                <td class="text-muted">${escapeHtml(m.joined || '—')}</td>
-                <td class="fw-bold">${m.fee ? formatCurrency(m.fee) : '—'}</td>
-                <td>${feeBadge}</td>
-                <td class="fw-bold text-info">${m.consumption ? formatCurrency(m.consumption) : '—'}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
     // ---- Refresh Everything ----
     async function refreshAll() {
         await loadAllData();
@@ -907,9 +576,8 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         renderExpensesTable();
         renderDailySummary();
         renderDebtsTable();
-        renderMembersTable();
-        renderViewMembersTable();
-        populateDebtMemberDropdown();
+        renderTrend();
+        renderWeekdayChart();
         if (currentRole) {
             const isAdmin = currentRole === 'admin';
             $$('.btn-icon-delete').forEach(btn => {
@@ -1091,6 +759,205 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         });
     }
 
+    // ---- Trends Chart ----
+    let trendChartInstance = null;
+
+    function renderTrend() {
+        const canvas = $('#trendChart');
+        if (!canvas) return;
+
+        const periodSel = $('#trendPeriod');
+        const period = periodSel ? periodSel.value : '30';
+
+        // Build a map of date -> { sales, purchaseCost, expenses }
+        const dateMap = {};
+        sales.forEach(s => {
+            if (!dateMap[s.date]) dateMap[s.date] = { sales: 0, purchaseCost: 0, expenses: 0 };
+            dateMap[s.date].sales += s.amount || 0;
+            dateMap[s.date].purchaseCost += (s.kilos || 0) * (s.costPerKilo || 0);
+        });
+        expenses.forEach(e => {
+            if (!dateMap[e.date]) dateMap[e.date] = { sales: 0, purchaseCost: 0, expenses: 0 };
+            dateMap[e.date].expenses += e.amount || 0;
+        });
+
+        let dates = Object.keys(dateMap).sort();
+        if (period !== 'all') {
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - parseInt(period));
+            const cutoffStr = cutoff.toISOString().split('T')[0];
+            dates = dates.filter(d => d >= cutoffStr);
+        }
+
+        const salesData = dates.map(d => dateMap[d].sales);
+        const profitData = dates.map(d => dateMap[d].sales - dateMap[d].purchaseCost - dateMap[d].expenses);
+        const expensesData = dates.map(d => dateMap[d].expenses + dateMap[d].purchaseCost);
+
+        // Stats
+        const avgSales = salesData.length ? salesData.reduce((a, b) => a + b, 0) / salesData.length : 0;
+        const maxProfit = profitData.length ? Math.max(...profitData) : 0;
+        const bestIdx = profitData.indexOf(maxProfit);
+        $('#trendAvgSales').textContent = formatCurrency(Math.round(avgSales));
+        $('#trendBestDay').textContent = bestIdx >= 0 ? dates[bestIdx] : '—';
+        $('#trendBestProfit').textContent = formatCurrency(maxProfit);
+
+        // Chart
+        if (trendChartInstance) trendChartInstance.destroy();
+        trendChartInstance = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Sales',
+                        data: salesData,
+                        borderColor: '#d4a017',
+                        backgroundColor: 'rgba(212,160,23,0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'Profit',
+                        data: profitData,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40,167,69,0.08)',
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'Costs & Expenses',
+                        data: expensesData,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220,53,69,0.07)',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 3,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#ccc' } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString() + ' VT',
+                        },
+                    },
+                },
+                scales: {
+                    x: { ticks: { color: '#aaa', maxTicksLimit: 10 }, grid: { color: '#333' } },
+                    y: { ticks: { color: '#aaa', callback: v => Number(v).toLocaleString() + ' VT' }, grid: { color: '#333' } },
+                },
+            },
+        });
+        renderWeekdayChart();
+    }
+
+    let weekdayChartInstance = null;
+
+    function renderWeekdayChart() {
+        const canvas = $('#weekdayChart');
+        if (!canvas) return;
+
+        const DAYS_ORDERED = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        // dow order: Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6, Sun=0
+        const DOW_INDEX = [1, 2, 3, 4, 5, 6, 0];
+
+        // buckets[0..6] -> index matches DOW_INDEX order (Mon first)
+        const buckets = Array.from({ length: 7 }, () => ({ sales: 0, purchaseCost: 0, expenses: 0 }));
+
+        sales.forEach(s => {
+            const d = new Date(s.date + 'T00:00:00');
+            const dow = d.getDay(); // 0=Sun .. 6=Sat
+            const idx = DOW_INDEX.indexOf(dow);
+            if (idx === -1) return;
+            buckets[idx].sales += s.amount || 0;
+            buckets[idx].purchaseCost += (s.kilos || 0) * (s.costPerKilo || 0);
+        });
+
+        expenses.forEach(e => {
+            const d = new Date(e.date + 'T00:00:00');
+            const dow = d.getDay();
+            const idx = DOW_INDEX.indexOf(dow);
+            if (idx === -1) return;
+            buckets[idx].expenses += e.amount || 0;
+        });
+
+        const salesData = buckets.map(b => b.sales);
+        const profitData = buckets.map(b => b.sales - b.purchaseCost - b.expenses);
+        const costsData = buckets.map(b => b.expenses + b.purchaseCost);
+
+        // Best weekday stats
+        const maxSales = salesData.length ? Math.max(...salesData) : 0;
+        const bestIdx = salesData.indexOf(maxSales);
+        const bestProfit = profitData[bestIdx] || 0;
+        $('#weekdayBestLabel').textContent = bestIdx >= 0 ? DAYS_ORDERED[bestIdx] : '—';
+        $('#weekdayBestSales').textContent = formatCurrency(maxSales);
+        $('#weekdayBestProfit').textContent = formatCurrency(bestProfit);
+
+        if (weekdayChartInstance) weekdayChartInstance.destroy();
+        weekdayChartInstance = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: DAYS_ORDERED,
+                datasets: [
+                    {
+                        label: 'Sales',
+                        data: salesData,
+                        backgroundColor: 'rgba(212,160,23,0.80)',
+                        borderColor: '#d4a017',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                    },
+                    {
+                        label: 'Profit',
+                        data: profitData,
+                        backgroundColor: 'rgba(40,167,69,0.75)',
+                        borderColor: '#28a745',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                    },
+                    {
+                        label: 'Costs & Expenses',
+                        data: costsData,
+                        backgroundColor: 'rgba(220,53,69,0.65)',
+                        borderColor: '#dc3545',
+                        borderWidth: 1,
+                        borderRadius: 5,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#ccc' } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString() + ' VT',
+                        },
+                    },
+                },
+                scales: {
+                    x: { ticks: { color: '#aaa' }, grid: { color: '#333' } },
+                    y: {
+                        ticks: { color: '#aaa', callback: v => Number(v).toLocaleString() + ' VT' },
+                        grid: { color: '#333' },
+                    },
+                },
+            },
+        });
+    }
+
+    function initTrend() {
+        const sel = $('#trendPeriod');
+        if (sel) sel.addEventListener('change', renderTrend);
+    }
+
     // ---- Hash-Based Routing ----
     const TAB_ROUTES = {
         'record-sale': { btn: '#tab-btn-sales', admin: true },
@@ -1099,8 +966,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         'expenses': { btn: '#tab-btn-expense-history', admin: false },
         'summary': { btn: '#tab-btn-daily-summary', admin: false },
         'debts': { btn: '#tab-btn-debts', admin: false },
-        'members': { btn: '#tab-btn-view-members', admin: false },
-        'manage-members': { btn: '#tab-btn-members', admin: true },
+        'trend': { btn: '#tab-btn-trend', admin: false },
         'report': { btn: '#tab-btn-report', admin: false },
         'security': { btn: '#tab-btn-security', admin: true },
     };
@@ -1238,14 +1104,11 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
         initExpenseForm();
         initFilter();
         initDebtForm();
-        initMemberForm();
         initReport();
+        initTrend();
         initChangePinForm();
         initTimeoutSettings();
         initRouter();
-        // View Members search
-        const viewSearch = $('#viewMemberSearch');
-        if (viewSearch) viewSearch.addEventListener('input', () => renderViewMembersTable());
         refreshAll();
     }
 
