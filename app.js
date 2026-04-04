@@ -713,19 +713,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             landing.classList.add('d-none');
             mainApp.classList.remove('d-none');
             applyRole();
-            // Filter Get App dropdown to only show the logged-in nakamal's APK
-            const menu = $('#getAppMenu');
-            if (menu) {
-                menu.querySelectorAll('li').forEach(li => {
-                    const a = li.querySelector('[data-location]');
-                    if (!a) return;
-                    if (!currentLocationId || currentLocationId === 'admin') {
-                        li.style.display = ''; // sysadmin sees all
-                    } else {
-                        li.style.display = a.dataset.location === currentLocationId ? '' : 'none';
-                    }
-                });
-            }
             await refreshAll();
             if (role === 'admin') startSessionMonitor();
         }
@@ -744,7 +731,7 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
                             nakamalSel.appendChild(opt);
                         });
                     }
-                } catch (_) {}
+                } catch (_) { }
             }
             adminPinBox.style.display = 'block';
             loginAdmin.style.display = 'none';
@@ -799,9 +786,6 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             landing.classList.remove('d-none');
             adminPinBox.style.display = 'none';
             loginAdmin.style.display = '';
-            // Reset Get App dropdown visibility
-            const menu = $('#getAppMenu');
-            if (menu) menu.querySelectorAll('li').forEach(li => li.style.display = '');
             history.replaceState(null, '', location.pathname);
         });
     }

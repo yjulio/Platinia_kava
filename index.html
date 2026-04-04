@@ -86,27 +86,11 @@
                 </a>
                 <div class="d-flex align-items-center gap-3">
                     <span id="roleLabel" class="badge"></span>
-                    <div class="dropdown" id="getAppDropdown">
-                        <button class="btn btn-sm fw-semibold dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" style="border:1px solid #d4a017;color:#d4a017;border-radius:8px;">
-                            <i class="bi bi-android2 me-1"></i>Get App
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" id="getAppMenu"
-                            style="background:#1e2a10;border:1px solid #d4a017;">
-                            <li>
-                                <a class="dropdown-item fw-semibold" href="/downloads/kava-pos-port-vila.apk"
-                                    download="kava-pos-port-vila.apk" style="color:#d4a017;" data-location="port-vila">
-                                    <i class="bi bi-download me-2"></i>Port Vila
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item fw-semibold" href="/downloads/kava-pos-plat.apk"
-                                    download="kava-pos-plat.apk" style="color:#d4a017;" data-location="plat">
-                                    <i class="bi bi-download me-2"></i>Platinia Nakamal
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    <a id="getAppBtn" href="/downloads/kava-pos.apk" download="kava-pos.apk"
+                        class="btn btn-sm fw-semibold"
+                        style="border:1px solid #d4a017;color:#d4a017;border-radius:8px;">
+                        <i class="bi bi-android2 me-1"></i>Get App
+                    </a>
                     <button id="logoutBtn" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-box-arrow-right me-1"></i>Logout
                     </button>
