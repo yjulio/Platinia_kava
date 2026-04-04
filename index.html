@@ -50,7 +50,12 @@
             </div>
             <!-- Admin PIN Box -->
             <div id="adminPinBox" class="pin-box mt-4" style="display:none">
-                <label for="adminPin" class="form-label text-gold mb-2">Enter Admin PIN</label>
+                <label for="adminNakamalId" class="form-label text-gold mb-1">Select Nakamal</label>
+                <select id="adminNakamalId" class="form-select form-select-lg pin-input mx-auto mb-3"
+                    style="background:#1e2a10;color:#d4a017;border-color:#d4a017;">
+                    <option value="admin">System Admin</option>
+                </select>
+                <label for="adminPin" class="form-label text-gold mb-2">Enter PIN</label>
                 <input type="password" id="adminPin" class="form-control form-control-lg pin-input mx-auto"
                     maxlength="6" placeholder="••••">
                 <div class="d-flex gap-2 justify-content-center mt-3">
@@ -81,22 +86,22 @@
                 </a>
                 <div class="d-flex align-items-center gap-3">
                     <span id="roleLabel" class="badge"></span>
-                    <div class="dropdown">
+                    <div class="dropdown" id="getAppDropdown">
                         <button class="btn btn-sm fw-semibold dropdown-toggle" type="button" data-bs-toggle="dropdown"
                             aria-expanded="false" style="border:1px solid #d4a017;color:#d4a017;border-radius:8px;">
                             <i class="bi bi-android2 me-1"></i>Get App
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end"
+                        <ul class="dropdown-menu dropdown-menu-end" id="getAppMenu"
                             style="background:#1e2a10;border:1px solid #d4a017;">
                             <li>
                                 <a class="dropdown-item fw-semibold" href="/downloads/kava-pos-port-vila.apk"
-                                    download="kava-pos-port-vila.apk" style="color:#d4a017;">
+                                    download="kava-pos-port-vila.apk" style="color:#d4a017;" data-location="port-vila">
                                     <i class="bi bi-download me-2"></i>Port Vila
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item fw-semibold" href="/downloads/kava-pos-plat.apk"
-                                    download="kava-pos-plat.apk" style="color:#d4a017;">
+                                    download="kava-pos-plat.apk" style="color:#d4a017;" data-location="plat">
                                     <i class="bi bi-download me-2"></i>Platinia Nakamal
                                 </a>
                             </li>

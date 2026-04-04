@@ -31,6 +31,7 @@
     let transactions = [];
     let activeFilter = null;
     let currentRole = null;
+    let currentLocationId = null;
     let failedAttempts = 0;
     let lockoutUntil = 0;
     let sessionTimer = null;
@@ -706,16 +707,45 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
             }, 500);
         }
 
-        async function enterApp(role) {
+        async function enterApp(role, locId) {
             currentRole = role;
+            currentLocationId = locId || null;
             landing.classList.add('d-none');
             mainApp.classList.remove('d-none');
             applyRole();
+            // Filter Get App dropdown to only show the logged-in nakamal's APK
+            const menu = $('#getAppMenu');
+            if (menu) {
+                menu.querySelectorAll('li').forEach(li => {
+                    const a = li.querySelector('[data-location]');
+                    if (!a) return;
+                    if (!currentLocationId || currentLocationId === 'admin') {
+                        li.style.display = ''; // sysadmin sees all
+                    } else {
+                        li.style.display = a.dataset.location === currentLocationId ? '' : 'none';
+                    }
+                });
+            }
             await refreshAll();
             if (role === 'admin') startSessionMonitor();
         }
 
-        loginAdmin.addEventListener('click', () => {
+        loginAdmin.addEventListener('click', async () => {
+            // Populate nakamal select from API
+            const nakamalSel = $('#adminNakamalId');
+            if (nakamalSel && nakamalSel.options.length <= 1) {
+                try {
+                    const locs = await api('/locations');
+                    if (Array.isArray(locs)) {
+                        locs.forEach(loc => {
+                            const opt = document.createElement('option');
+                            opt.value = loc.id;
+                            opt.textContent = loc.name;
+                            nakamalSel.appendChild(opt);
+                        });
+                    }
+                } catch (_) {}
+            }
             adminPinBox.style.display = 'block';
             loginAdmin.style.display = 'none';
             adminPinInput.value = '';
@@ -731,10 +761,13 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
         pinSubmit.addEventListener('click', async () => {
             if (isLockedOut()) { showLockoutTimer(); return; }
-            const pinCheck = await api('/auth/verify', { method: 'POST', body: { pin: adminPinInput.value } });
+            const nakamalSel = $('#adminNakamalId');
+            const selectedId = nakamalSel ? nakamalSel.value : 'admin';
+            const pinCheck = await api('/auth/sysadmin/verify', { method: 'POST', body: { id: selectedId, pin: adminPinInput.value } });
             if (pinCheck.valid) {
                 clearLockout();
-                enterApp('admin');
+                const locId = pinCheck.role === 'nakamal' ? pinCheck.locationId : null;
+                enterApp('admin', locId);
             } else {
                 recordFailedAttempt();
                 if (isLockedOut()) {
@@ -760,11 +793,15 @@ td{padding:7px 10px;border-bottom:1px solid #eee}
 
         $('#logoutBtn').addEventListener('click', () => {
             currentRole = null;
+            currentLocationId = null;
             stopSessionMonitor();
             mainApp.classList.add('d-none');
             landing.classList.remove('d-none');
             adminPinBox.style.display = 'none';
             loginAdmin.style.display = '';
+            // Reset Get App dropdown visibility
+            const menu = $('#getAppMenu');
+            if (menu) menu.querySelectorAll('li').forEach(li => li.style.display = '');
             history.replaceState(null, '', location.pathname);
         });
     }
